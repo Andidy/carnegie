@@ -5,9 +5,9 @@
 #include "carnegie.cpp"
 // ^^^^ Carnegie game and engine stuff
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
+//#ifndef WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN
+//#endif
 
 #include <windows.h>
 #include <xinput.h>
@@ -18,8 +18,8 @@
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
-#include "d3dx12.h"
-using namespace DirectX;
+//#include "d3dx12.h"
+//using namespace DirectX;
 // ^^^^ DirectX12
 
 #include <math.h>
@@ -69,6 +69,7 @@ void _win32_CheckSucceeded(HRESULT hr, char* str, int line)
 {
   if (!SUCCEEDED(hr)) {
     char win32_check_succeeded_buf[128];
+    #pragma warning(suppress : 4996)
     sprintf(win32_check_succeeded_buf, "%s: hr failed: %d", str, line);
     MessageBoxA(0, win32_check_succeeded_buf, "CheckSucceeded failed", MB_OK);
     __debugbreak();
