@@ -5,5 +5,4 @@
 *.rdbg
 
 .vs
-
-build/test.txt
+build
