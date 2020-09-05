@@ -1,28 +1,33 @@
 #ifndef WIN32_CARNEGIE_H
 #define WIN32_CARNEGIE_H
 
-#define PI 3.14159265359f
 #include "ady_types.h"
 #include "carnegie.cpp"
 // ^^^^ Carnegie game and engine stuff
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <windows.h>
 #include <xinput.h>
 #include <dsound.h>
-
-#include <initguid.h>
-
-#include <d3d12.h>
-#include <dxgi1_6.h>
 // ^^^^ Windows specific stuff
 
 #include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include "d3dx12.h"
+using namespace DirectX;
 // ^^^^ DirectX12
 
 #include <math.h>
 #include <stdio.h>
 // ^^^^ C libs
 
+//#include "image_handling.cpp"
+// ^^^^ broken out funcitonality
 
 /*
 
@@ -60,7 +65,16 @@ global HRESULT hresult;
 
 #define win32_Assert(x) if(!(x)) { MessageBoxA(0, #x, "Assertion failed", MB_OK); __debugbreak(); }
 #define win32_Check(x) if(!(x)) { MessageBoxA(0, #x, "Check failed", MB_OK); __debugbreak(); }
-#define win32_CheckSucceeded(hresult) if(!SUCCEEDED(hresult)) { MessageBoxA(0, #hresult, "CheckSucceeded failed", MB_OK); __debugbreak(); }
+void _win32_CheckSucceeded(HRESULT hr, char* str, int line)
+{
+  if (!SUCCEEDED(hr)) {
+    char win32_check_succeeded_buf[128];
+    sprintf(win32_check_succeeded_buf, "%s: hr failed: %d", str, line);
+    MessageBoxA(0, win32_check_succeeded_buf, "CheckSucceeded failed", MB_OK);
+    __debugbreak();
+  }
+}
+#define win32_CheckSucceeded(hr) _win32_CheckSucceeded(hr, __FILE__, __LINE__)
 
 /* -------------------- MACROS --------------------- */
 
