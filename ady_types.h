@@ -27,4 +27,11 @@ typedef unsigned char uchar;
 #define local    static
 #define global   static
 
+/* A couple math things, maybe move this somewhere else */
+#define PI 3.14159265359f
+inline f32 DegToRad(f32 angle)
+{
+  return (angle * (PI / 180.0f));
+}
+
 #endif
