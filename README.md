@@ -3,7 +3,7 @@
 Todo:
 
 - [X] Complete d3d12 tutorials
-- [ ] Finish handmade hero platform layer episodes (15-25)
+- [ ] Finish handmade hero platform layer episodes (16-25)
 - [ ] Port D3D12 rendering code onto the HMH platform layer
 - [ ] Port existing Bismarck code onto the new Platform layer / Renderer
 
