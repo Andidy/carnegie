@@ -5,3 +5,5 @@
 *.rdbg
 
 .vs
+
+build/test.txt
