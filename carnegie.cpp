@@ -29,7 +29,7 @@ internal void RenderWeirdGradient(game_OffscreenBuffer* buffer, i32 xoff, i32 yo
 internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 {
   local f32 tsin;
-  i16 toneVolume = 1000;
+  i16 toneVolume = 100;
   i32 wavePeriod = soundBuffer->samplesPerSecond / toneHertz;
 
   i16 *sampleOut = soundBuffer->samples;

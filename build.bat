@@ -4,9 +4,12 @@ IF NOT EXIST build mkdir build
 pushd build
 
 cl -WX -W4 -wd4100 -wd4201 ^
- -Oi -GR -EHa- ^
+ -wd4238 ^
+ -Oi -GR -EHa- -EHsc ^
+ -MT -Gm- ^
  -Zi ..\win32_carnegie.cpp ^
- user32.lib gdi32.lib Xinput.lib ^
- d3d12.lib dxgi.lib dxguid.lib -nologo
+ user32.lib ole32.lib gdi32.lib ^
+ Xinput.lib d3d12.lib dxgi.lib ^
+ dxguid.lib d3dcompiler.lib -nologo
 
 popd

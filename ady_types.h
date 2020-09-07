@@ -20,8 +20,8 @@ typedef u32     b32;
 
 typedef unsigned char uchar;
 
-#define false 0
-#define true  1
+// #define false 0
+// #define true  1
 
 #define internal static
 #define local    static

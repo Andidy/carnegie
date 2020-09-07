@@ -18,15 +18,15 @@
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
-//#include "d3dx12.h"
-//using namespace DirectX;
+#include "d3dx12.h"
+using namespace DirectX;
 // ^^^^ DirectX12
 
 #include <math.h>
 #include <stdio.h>
 // ^^^^ C libs
 
-//#include "image_handling.cpp"
+#include "image_handling.cpp"
 // ^^^^ broken out funcitonality
 
 /*
@@ -57,15 +57,14 @@
 
 */
 
-
-global b32 Running;
-global HRESULT hresult;
+global b32 win32_running;
 
 /* -------------------- MACROS --------------------- */
+global HRESULT hr;
 
 #define win32_Assert(x) if(!(x)) { MessageBoxA(0, #x, "Assertion failed", MB_OK); __debugbreak(); }
 #define win32_Check(x) if(!(x)) { MessageBoxA(0, #x, "Check failed", MB_OK); __debugbreak(); }
-void _win32_CheckSucceeded(HRESULT hr, char* str, int line)
+void _win32_CheckSucceeded(char* str, int line)
 {
   if (!SUCCEEDED(hr)) {
     char win32_check_succeeded_buf[128];
@@ -75,49 +74,13 @@ void _win32_CheckSucceeded(HRESULT hr, char* str, int line)
     __debugbreak();
   }
 }
-#define win32_CheckSucceeded(hr) _win32_CheckSucceeded(hr, __FILE__, __LINE__)
+#define win32_CheckSucceeded() _win32_CheckSucceeded(__FILE__, __LINE__)
 
 /* -------------------- MACROS --------------------- */
 
-/* ------------------- RENDERING ------------------- */
-#pragma region WIN32
-typedef struct win32_OffscreenBuffer
-{
-  BITMAPINFO info;
-  void* memory;
-  i32 width;
-  i32 height;
-  i32 pitch;
-  i32 bytesPerPixel;
-} win32_OffscreenBuffer;
-global win32_OffscreenBuffer global_Backbuffer;
+#include "win32_input.cpp"
+#include "win32_fileio.cpp"
+#include "win32_sound.cpp"
+#include "win32_renderer.cpp"
 
-typedef struct win32_WindowDimension
-{
-  i32 width;
-  i32 height;
-} win32_WindowDimension;
-#pragma endregion
-
-#pragma region D3D12
-
-#pragma endregion
-/* ------------------- RENDERING ------------------- */
-
-/* ------------------ DIRECT SOUND ----------------- */
-
-global LPDIRECTSOUNDBUFFER win32_SecondarySoundBuffer;
-
-typedef struct win32_SoundStruct
-{
-  i32 bytesPerSample; // = sizeof(i16) * 2;
-  i32 samplesPerSecond; // = 48000;
-  u32 runningSampleIndex; // = 0;
-  i32 wavePeriod; // = samplesPerSecond / toneHertz;
-  i32 secondaryBufferSize; // = samplesPerSecond * bytesPerSample;
-  i32 latencySampleCount; // samplesPerSecond / 15;
-  f32 tsin;
-} win32_SoundStruct;
-
-/* ------------------ DIRECT SOUND ----------------- */
 #endif
