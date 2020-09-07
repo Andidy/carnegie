@@ -156,6 +156,29 @@ void win32_UpdateWindow(win32_OffscreenBuffer* buffer, HDC DeviceContext, i32 wi
 
 #pragma region D3D12
 
+void WaitForPreviousFrame()
+{
+  hr = 0;
+
+  // swap current rtv buffer index so we draw on the correct buffer
+  frameIndex = swapchain->GetCurrentBackBufferIndex();
+
+  // if the current fence value is less than "fenceValue"
+  // then we know the GPU has not finished executing the command queue
+  // since it has not reached the commandQueue->Signal() command
+  if (fence[frameIndex]->GetCompletedValue() < fenceValue[frameIndex])
+  {
+    hr = fence[frameIndex]->SetEventOnCompletion(fenceValue[frameIndex], fenceEvent);
+    win32_CheckSucceeded();
+
+    // we will wait until the fence has triggered the event to proceed
+    WaitForSingleObject(fenceEvent, INFINITE);
+  }
+
+  // increment fence value for the next frame
+  fenceValue[frameIndex]++;
+}
+
 void InitD3D(HWND window)
 {
   /* Create the device */
@@ -786,6 +809,150 @@ void InitD3D(HWND window)
   XMStoreFloat4x4(&cube2worldmat, tmpmat);
 
   OutputDebugStringA("Successfully Initialized D3D\n");
+}
+
+void UpdatePipeline()
+{
+  hr = 0;
+
+  WaitForPreviousFrame();
+
+  hr = commandAllocator[frameIndex]->Reset();
+  win32_CheckSucceeded();
+
+  // reset the command list. by resetting the command list we are putting it into
+  // a recording state so we can start recording commands into the command allocator.
+  // the command allocator that we reference here may have multiple command lists
+  // associated with it, but only one can be recording at any time. Make sure
+  // that any other command lists associated to this command allocator are in
+  // the closed state (not recording).
+  // Here you will pass an initial pipeline state object as the second parameter,
+  // but in this tutorial we are only clearing the rtv, and do not actually need
+  // anything but an initial default pipeline, which is what we get by setting
+  // the second parameter to NULL
+  hr = commandList->Reset(commandAllocator[frameIndex], pipelineStateObject);
+  win32_CheckSucceeded();
+
+  D3D12_RESOURCE_BARRIER resourceBarrier = { 0 };
+  resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  resourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  resourceBarrier.Transition.pResource = renderTargets[frameIndex];
+  resourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+  resourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+  commandList->ResourceBarrier(1, &resourceBarrier);
+
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+  cpuDescriptorHandle.ptr = (SIZE_T)(((INT64)cpuDescriptorHandle.ptr) + ((INT64)frameIndex) * ((INT64)rtvDescSize));
+
+  D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+  commandList->OMSetRenderTargets(1, &cpuDescriptorHandle, false, &dsvHandle);
+  const f32 clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+  commandList->ClearRenderTargetView(cpuDescriptorHandle, clearColor, 0, 0);
+  commandList->ClearDepthStencilView(dsDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, 0);
+
+  commandList->SetGraphicsRootSignature(rootSignature);
+
+  // set the descriptor heap
+  ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
+  commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+  // set the descriptor table to the descriptor heap
+  commandList->SetGraphicsRootDescriptorTable(1, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+
+  // draw triangle
+  commandList->RSSetViewports(1, &viewport); // set the viewports
+  commandList->RSSetScissorRects(1, &scissorRect); // set the scissor rects
+  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
+  commandList->IASetVertexBuffers(0, 1, &vertexBufferView); // set the vertex buffer (using the vertex buffer view)
+  commandList->IASetIndexBuffer(&indexBufferView);
+
+  // first cube
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+  commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
+
+  // second cube
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
+  commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
+
+  // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
+  // warning if present is called on the render target when it's not in the present state
+  resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  resourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  resourceBarrier.Transition.pResource = renderTargets[frameIndex];
+  resourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+  resourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+  commandList->ResourceBarrier(1, &resourceBarrier);
+
+  hr = commandList->Close();
+  win32_CheckSucceeded();
+}
+
+void Render()
+{
+  hr = 0;
+
+  UpdatePipeline();
+
+  // create an array of command lists (only 1 here)
+  ID3D12CommandList* ppCommandLists[] = { commandList };
+
+  // execute the array of command lists
+  commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+  // this command goes in at the end of our command queue
+  // we will know when our command queue had finished because
+  // the fence value will be set to "fenceValue" variable from the GPU
+  // since the command queue is being executed on the GPU
+  hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
+  win32_CheckSucceeded();
+
+  // present the current back buffer
+  hr = swapchain->Present(0, 0);
+  win32_CheckSucceeded();
+}
+
+void Update()
+{
+  XMMATRIX rotXmat = XMMatrixRotationX(0.00001f);
+  XMMATRIX rotYmat = XMMatrixRotationY(0.00002f);
+  XMMATRIX rotZmat = XMMatrixRotationZ(0.00003f);
+
+  XMMATRIX rotmat = XMLoadFloat4x4(&cube1rotmat) * rotXmat * rotYmat * rotZmat;
+  XMStoreFloat4x4(&cube1rotmat, rotmat);
+
+  XMMATRIX transmat = XMMatrixTranslationFromVector(XMLoadFloat4(&cube1pos));
+  XMMATRIX worldmat = rotmat * transmat;
+  XMStoreFloat4x4(&cube1worldmat, worldmat);
+
+  XMMATRIX view = XMLoadFloat4x4(&viewmat);
+  XMMATRIX proj = XMLoadFloat4x4(&projmat);
+  XMMATRIX mvp = XMLoadFloat4x4(&cube1worldmat) * view * proj;
+  XMMATRIX transposed = XMMatrixTranspose(mvp);
+  XMStoreFloat4x4(&cbPerObject.mvp, transposed);
+
+  memcpy(cbvGPUAddess[frameIndex], &cbPerObject, sizeof(cbPerObject));
+
+  rotXmat = XMMatrixRotationX(0.00003f);
+  rotYmat = XMMatrixRotationY(0.00002f);
+  rotZmat = XMMatrixRotationZ(0.00001f);
+
+  rotmat = rotZmat * (XMLoadFloat4x4(&cube2rotmat) * (rotXmat * rotYmat));
+  XMStoreFloat4x4(&cube2rotmat, rotmat);
+
+  XMMATRIX transoffsetmat = XMMatrixTranslationFromVector(XMLoadFloat4(&cube2offset));
+  XMMATRIX scalemat = XMMatrixScaling(0.5f, 0.5f, 0.5f);
+
+  worldmat = scalemat * transoffsetmat * rotmat * transmat;
+
+  mvp = XMLoadFloat4x4(&cube2worldmat) * view * proj;
+  transposed = XMMatrixTranspose(mvp);
+  XMStoreFloat4x4(&cbPerObject.mvp, transposed);
+
+  memcpy(cbvGPUAddess[frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+  XMStoreFloat4x4(&cube2worldmat, worldmat);
 }
 
 #pragma endregion

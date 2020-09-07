@@ -202,8 +202,13 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
       // GAME LOOP ----------------------------------------------
+
+      u32 counter = 0;
+
       while(win32_running)
       {
+        ++counter;
+        
         // Input
         MSG Message;
         while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
@@ -376,6 +381,9 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
         dim = win32_GetWindowDimension(window);
         win32_UpdateWindow(&global_Backbuffer, deviceContext, dim.width, dim.height);
         
+        Update();
+        Render();
+
         #pragma region timing
         /*
         LARGE_INTEGER endtimer;
