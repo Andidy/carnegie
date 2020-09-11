@@ -2,26 +2,6 @@
 
 /* --------------- RENDERING --------------- */
 
-internal void RenderWeirdGradient(game_OffscreenBuffer* buffer, i32 xoff, i32 yoff)
-{
-  i32 width = buffer->width;
-  i32 height = buffer->height;
-  i32 pitch = buffer->pitch;
-
-  u8* row = (u8*)buffer->memory;
-  for (i32 y = 0; y < height; ++y)
-  {
-    u32* pixel = (u32*)row;
-    for (i32 x = 0; x < width; ++x)
-    {
-      u8 blue = (u8)(x + xoff);
-      u8 green = (u8)(y + yoff);
-      *pixel++ = ((green << 8) | blue);
-    }
-    row += pitch;
-  }
-}
-
 /* --------------- RENDERING --------------- */
 
 /* --------------- SOUND --------------- */
@@ -46,7 +26,7 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 /* --------------- SOUND --------------- */
 
-internal void GameUpdateAndRender(game_Memory *gameMemory, game_Input *Input, game_OffscreenBuffer *offscreenBuffer, game_SoundBuffer *soundBuffer)
+internal void GameUpdateAndRender(game_Memory *gameMemory, game_Input *Input, game_SoundBuffer *soundBuffer)
 {
   game_State* gameState = (game_State *)gameMemory->data;
   if (!gameMemory->isInitialized)
@@ -85,6 +65,4 @@ internal void GameUpdateAndRender(game_Memory *gameMemory, game_Input *Input, ga
   
   // todo: allow sample offsets here for more robust platform options
   GameOutputSound(soundBuffer, gameState->toneHertz);
-  
-  RenderWeirdGradient(offscreenBuffer, gameState->xoff, gameState->yoff);
 }

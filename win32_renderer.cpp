@@ -2,7 +2,7 @@ ID3D12Debug* debugController;
 
 /* ------------------- RENDERING ------------------- */
 #pragma region WIN32
-typedef struct win32_OffscreenBuffer
+/*typedef struct win32_OffscreenBuffer
 {
   BITMAPINFO info;
   void* memory;
@@ -12,7 +12,7 @@ typedef struct win32_OffscreenBuffer
   i32 bytesPerPixel;
 } win32_OffscreenBuffer;
 global win32_OffscreenBuffer global_Backbuffer;
-
+*/
 typedef struct win32_WindowDimension
 {
   i32 width;
@@ -110,6 +110,7 @@ u64 fenceValue[def_FrameCount];
 
 /* ------------------- RENDERING ------------------- */
 #pragma region Windows
+/*
 internal win32_WindowDimension win32_GetWindowDimension(HWND Window)
 {
   RECT clientRect;
@@ -151,7 +152,7 @@ void win32_UpdateWindow(win32_OffscreenBuffer* buffer, HDC DeviceContext, i32 wi
     DeviceContext, 0, 0, windowWidth, windowHeight,
     0, 0, buffer->width, buffer->height, buffer->memory, &buffer->info, DIB_RGB_COLORS, SRCCOPY
   );
-}
+}*/
 #pragma endregion
 
 #pragma region D3D12
@@ -169,7 +170,7 @@ void WaitForPreviousFrame()
   if (fence[frameIndex]->GetCompletedValue() < fenceValue[frameIndex])
   {
     hr = fence[frameIndex]->SetEventOnCompletion(fenceValue[frameIndex], fenceEvent);
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
 
     // we will wait until the fence has triggered the event to proceed
     WaitForSingleObject(fenceEvent, INFINITE);
@@ -184,7 +185,7 @@ void InitD3D(HWND window)
   /* Create the device */
   IDXGIFactory4* dxgiFactory;
   hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   IDXGIAdapter1* adapter;
   i32 adapterIndex = 0;
@@ -216,7 +217,7 @@ void InitD3D(HWND window)
   }
 
   hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   /* Create Render Target View Command Queue */
   D3D12_COMMAND_QUEUE_DESC commandQueueDesc = { 0 };
@@ -225,7 +226,7 @@ void InitD3D(HWND window)
   commandQueueDesc.NodeMask = 0;
   commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
   hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   /* Create the swapchain */
   DXGI_SWAP_CHAIN_DESC1 swapchainDesc = { 0 };
@@ -241,7 +242,7 @@ void InitD3D(HWND window)
 
   IDXGISwapChain1* swapchain1;
   hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, window, &swapchainDesc, 0, 0, &swapchain1);
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   swapchain = (IDXGISwapChain3*)(swapchain1);
   frameIndex = swapchain->GetCurrentBackBufferIndex();
@@ -254,7 +255,7 @@ void InitD3D(HWND window)
     descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     descHeapDesc.NumDescriptors = frameCount;
     hr = device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&rtvHeap));
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
     rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
   }
 
@@ -266,7 +267,7 @@ void InitD3D(HWND window)
     {
       // Create an rtv for each frame
       hr = swapchain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
-      win32_CheckSucceeded();
+      win32_CheckSucceeded(hr);
 
       device->CreateRenderTargetView(renderTargets[i], NULL, cpuDescriptorHandle);
 
@@ -277,18 +278,18 @@ void InitD3D(HWND window)
   for (i32 i = 0; i < frameCount; i++)
   {
     hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i]));
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
   }
 
   // Create the command list
   hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator[0], NULL, IID_PPV_ARGS(&commandList));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // Create Fences & Fence Events
   for (i32 i = 0; i < frameCount; i++)
   {
     hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[i]));
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
     fenceValue[i] = 0;
   }
 
@@ -297,7 +298,7 @@ void InitD3D(HWND window)
   if (fenceEvent == 0)
   {
     hr = HRESULT_FROM_WIN32(GetLastError());
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
   }
 
   // Create RootSignature
@@ -359,10 +360,10 @@ void InitD3D(HWND window)
 
   ID3DBlob* signature;
   hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, 0);
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // create vertex and pixel shaders
 
@@ -447,7 +448,7 @@ void InitD3D(HWND window)
   psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
   psoDesc.NumRenderTargets = 1;
   hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // Create vertex buffer
   Vertex vList[] = {
@@ -501,7 +502,7 @@ void InitD3D(HWND window)
     0,
     IID_PPV_ARGS(&vertexBuffer)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // give the heap a name for debugging
   vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
@@ -515,7 +516,7 @@ void InitD3D(HWND window)
     D3D12_RESOURCE_STATE_GENERIC_READ,
     0, IID_PPV_ARGS(&vBufferUploadHeap)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
   vBufferUploadHeap->SetName(L"VertexBufferUploadResourceHeap");
 
   // store buffer in upload heap
@@ -571,7 +572,7 @@ void InitD3D(HWND window)
     D3D12_RESOURCE_STATE_COPY_DEST,
     0, IID_PPV_ARGS(&indexBuffer)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
   indexBuffer->SetName(L"IndexBufferResourceName");
 
   // create upload heap to upload index buffer
@@ -583,7 +584,7 @@ void InitD3D(HWND window)
     D3D12_RESOURCE_STATE_GENERIC_READ,
     0, IID_PPV_ARGS(&iBufferUploadHeap)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
   iBufferUploadHeap->SetName(L"IndexBufferUploadResourceHeap");
 
   // store index buffer in upload heap
@@ -602,7 +603,7 @@ void InitD3D(HWND window)
   dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
   dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
   hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsDescHeap));
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = { 0 };
   depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -622,7 +623,7 @@ void InitD3D(HWND window)
     &depthOptimizedClearValue,
     IID_PPV_ARGS(&depthStencilBuffer)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
   dsDescHeap->SetName(L"Depth/StencilResourceHeap");
 
   device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescHeap->GetCPUDescriptorHandleForHeapStart());
@@ -652,14 +653,14 @@ void InitD3D(HWND window)
       D3D12_RESOURCE_STATE_GENERIC_READ,
       0, IID_PPV_ARGS(&constantBufferUploadHeaps[i])
     );
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
     constantBufferUploadHeaps[i]->SetName(L"ConstantBufferUploadHeap");
 
     ZeroMemory(&cbPerObject, sizeof(cbPerObject));
 
     CD3DX12_RANGE readRange(0, 0);
     hr = constantBufferUploadHeaps[i]->Map(0, &readRange, (void**)(&cbvGPUAddess[i]));
-    win32_CheckSucceeded();
+    win32_CheckSucceeded(hr);
 
     // Because of the constant read alignment requirements, constant buffer views must be 256 bit aligned. Our buffers are smaller than 256 bits,
     // so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
@@ -678,7 +679,7 @@ void InitD3D(HWND window)
   hr = device->CreateDescriptorHeap(
     &heapDesc, IID_PPV_ARGS(&mainDescriptorHeap)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // Load the image from file
   D3D12_RESOURCE_DESC textureDesc = { 0 };
@@ -688,7 +689,8 @@ void InitD3D(HWND window)
   // make sure we have loaded the image data
   if (imageSize <= 0)
   {
-    win32_running = true;
+    win32_running = false;
+    OutputDebugStringA("failed to load test image");
     return;
   }
 
@@ -699,7 +701,7 @@ void InitD3D(HWND window)
     D3D12_RESOURCE_STATE_COPY_DEST,
     0, IID_PPV_ARGS(&textureBuffer)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
   textureBuffer->SetName(L"TextureBufferResourceHeap");
 
   u64 textureUploadBufferSize;
@@ -714,7 +716,7 @@ void InitD3D(HWND window)
     D3D12_RESOURCE_STATE_GENERIC_READ,
     0, IID_PPV_ARGS(&textureBufferUploadHeap)
   );
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
   textureBufferUploadHeap->SetName(L"TextureBufferUploadResourceHeap");
 
   // Store vertex buffer in upload heap
@@ -746,7 +748,7 @@ void InitD3D(HWND window)
   // increment the fence value now, otherwise the buffer might not be uploaded by time we start drawing
   fenceValue[frameIndex]++;
   hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // done with image data so we can free it
   free(imageData);
@@ -818,7 +820,7 @@ void UpdatePipeline()
   WaitForPreviousFrame();
 
   hr = commandAllocator[frameIndex]->Reset();
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // reset the command list. by resetting the command list we are putting it into
   // a recording state so we can start recording commands into the command allocator.
@@ -831,7 +833,7 @@ void UpdatePipeline()
   // anything but an initial default pipeline, which is what we get by setting
   // the second parameter to NULL
   hr = commandList->Reset(commandAllocator[frameIndex], pipelineStateObject);
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   D3D12_RESOURCE_BARRIER resourceBarrier = { 0 };
   resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -887,7 +889,7 @@ void UpdatePipeline()
   commandList->ResourceBarrier(1, &resourceBarrier);
 
   hr = commandList->Close();
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 }
 
 void Render()
@@ -907,11 +909,11 @@ void Render()
   // the fence value will be set to "fenceValue" variable from the GPU
   // since the command queue is being executed on the GPU
   hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 
   // present the current back buffer
   hr = swapchain->Present(0, 0);
-  win32_CheckSucceeded();
+  win32_CheckSucceeded(hr);
 }
 
 void Update()

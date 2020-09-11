@@ -25,13 +25,6 @@ internal b32 dev_WriteFile(char *filename, u32 memorySize, void *memory);
 /* GAME -> PLATFORM LAYER */
 
 // Input, Render Buffer, Timing, Sound Buffer
-typedef struct game_OffscreenBuffer
-{
-  void* memory;
-  i32 width;
-  i32 height;
-  i32 pitch;
-} game_OffscreenBuffer;
 
 typedef struct game_SoundBuffer
 {
@@ -106,7 +99,7 @@ typedef struct game_Memory
   void* scratchdata; // NOTE: Must be cleared to ZERO at startup
 } game_Memory;
 
-internal void GameUpdateAndRender(game_Memory* game_Memory, game_Input* Input, game_OffscreenBuffer* offscreenBuffer, game_SoundBuffer* soundBuffer);
+internal void GameUpdateAndRender(game_Memory* game_Memory, game_Input* Input, game_SoundBuffer* soundBuffer);
 
 /* Game Only */
 

@@ -27,7 +27,6 @@ using namespace DirectX;
 // ^^^^ C libs
 
 #include "image_handling.cpp"
-// ^^^^ broken out funcitonality
 
 /*
 
@@ -64,9 +63,9 @@ global HRESULT hr;
 
 #define win32_Assert(x) if(!(x)) { MessageBoxA(0, #x, "Assertion failed", MB_OK); __debugbreak(); }
 #define win32_Check(x) if(!(x)) { MessageBoxA(0, #x, "Check failed", MB_OK); __debugbreak(); }
-void _win32_CheckSucceeded(char* str, int line)
+void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
 {
-  if (!SUCCEEDED(hr)) {
+  if (!SUCCEEDED(hresult)) {
     char win32_check_succeeded_buf[128];
     #pragma warning(suppress : 4996)
     sprintf(win32_check_succeeded_buf, "%s: hr failed: %d", str, line);
@@ -74,7 +73,7 @@ void _win32_CheckSucceeded(char* str, int line)
     __debugbreak();
   }
 }
-#define win32_CheckSucceeded() _win32_CheckSucceeded(__FILE__, __LINE__)
+#define win32_CheckSucceeded(hresult) _win32_CheckSucceeded(hresult, __FILE__, __LINE__)
 
 /* -------------------- MACROS --------------------- */
 
@@ -82,5 +81,7 @@ void _win32_CheckSucceeded(char* str, int line)
 #include "win32_fileio.cpp"
 #include "win32_sound.cpp"
 #include "win32_renderer.cpp"
+
+// ^^^^ broken out funcitonality
 
 #endif

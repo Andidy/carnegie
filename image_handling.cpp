@@ -107,7 +107,7 @@ int GetDXGIFormatBitsPerPixel(DXGI_FORMAT& dxgiFormat)
 int LoadImageDataFromFile(BYTE** imageData, D3D12_RESOURCE_DESC* resourceDescription, LPCWSTR filename, int* bytesPerRow)
 {
   HRESULT hr;
-
+  
   // we only need one instance of the imaging factory to create decoders and frames
   static IWICImagingFactory* wicFactory;
 

@@ -1,5 +1,7 @@
 #include "win32_carnegie.h"
 
+u32 counter = 0;
+
 LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 {
   LRESULT Result = 0;
@@ -96,7 +98,7 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
       }
     } break;
 
-    case WM_PAINT:
+    /*case WM_PAINT:
     {
       PAINTSTRUCT Paint;
       HDC DeviceContext = BeginPaint(Window, &Paint);
@@ -104,7 +106,7 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
       win32_UpdateWindow(&global_Backbuffer, DeviceContext, dim.width, dim.height);
       EndPaint(Window, &Paint);
     } break;
-    
+    */
     default:
     {
       Result = DefWindowProc(Window, Message, WParam, LParam);
@@ -116,19 +118,8 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
 
 i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int CmdShow)
 {
-  /* Enable D3D12 Debug layers */
-  hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
-  win32_CheckSucceeded();
-
-  debugController->EnableDebugLayer();
-
   /* XINPUT Function Pointers to handle LIB/DLL Loading */
   win32_LoadXInput();
-
-  //global_OffscreenBuffer.info;
-  global_Backbuffer.memory = 0;
-  global_Backbuffer.width = 0;
-  global_Backbuffer.height = 0;
 
   // Timing Info
   /*
@@ -153,20 +144,14 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       "Project Carnegie",
       WS_OVERLAPPEDWINDOW | WS_VISIBLE,
       CW_USEDEFAULT, CW_USEDEFAULT,
-      CW_USEDEFAULT, CW_USEDEFAULT,
+      global_windowWidth, global_windowHeight,
       0, 0, Instance, 0
     );
 
-    win32_WindowDimension dim = win32_GetWindowDimension(window);
-    win32_ResizeDIBSection(&global_Backbuffer, dim.width, dim.height);
-
     if(window)
     {
-      HDC deviceContext = GetDC(window);
+      //HDC deviceContext = GetDC(window);
       
-      // Init D3D12
-      InitD3D(window);
-
       // Sound Init
       win32_SoundStruct soundstruct = { 0 };
       soundstruct.bytesPerSample = sizeof(i16) * 2;
@@ -179,20 +164,20 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       win32_ClearSoundBuffer(&soundstruct);
       win32_SecondarySoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
-      i16 *samples = (i16 *)VirtualAlloc(0, soundstruct.secondaryBufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+      i16* samples = (i16*)VirtualAlloc(0, soundstruct.secondaryBufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
       // Configs and Tickers
       win32_running = true;
-      
+
       /*
       LARGE_INTEGER lasttimer;
       QueryPerformanceCounter(&lasttimer);
       u64 lastcyclecount = __rdtsc();
       */
-      
+
       game_Input gameInput[2] = { 0 };
-      game_Input *newInput = &gameInput[0];
-      game_Input *oldInput = &gameInput[1];
+      game_Input* newInput = &gameInput[0];
+      game_Input* oldInput = &gameInput[1];
 
       game_Memory gameMemory = { 0 };
       gameMemory.isInitialized = false;
@@ -201,9 +186,16 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       gameMemory.scratchsize = Gigabytes((u64)2);
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-      // GAME LOOP ----------------------------------------------
+      /* Enable D3D12 Debug layers */
+      hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
+      win32_CheckSucceeded(hr);
 
-      u32 counter = 0;
+      debugController->EnableDebugLayer();
+
+      // Init D3D12
+      InitD3D(window);
+
+      // GAME LOOP ----------------------------------------------
 
       while(win32_running)
       {
@@ -356,20 +348,13 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
           soundIsValid = true;
         }
 
-        // Rendering
-        game_OffscreenBuffer buffer = { 0 };
-        buffer.memory = global_Backbuffer.memory;
-        buffer.width = global_Backbuffer.width;
-        buffer.height = global_Backbuffer.height;
-        buffer.pitch = global_Backbuffer.pitch;
-
         //i16 samples[48000 * 2];
         game_SoundBuffer soundBuffer = { 0 };
         soundBuffer.samplesPerSecond = soundstruct.samplesPerSecond;
         soundBuffer.sampleCount = bytesToWrite / soundstruct.bytesPerSample;
         soundBuffer.samples = samples;
 
-        GameUpdateAndRender(&gameMemory, newInput, &buffer, &soundBuffer);
+        GameUpdateAndRender(&gameMemory, newInput, &soundBuffer);
 
         // Direct Sound Test Continued
         if(soundIsValid)
@@ -377,10 +362,6 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
           win32_FillSoundBuffer(&soundstruct, byteToLock, bytesToWrite, &soundBuffer);
         }
 
-        // Drawing
-        dim = win32_GetWindowDimension(window);
-        win32_UpdateWindow(&global_Backbuffer, deviceContext, dim.width, dim.height);
-        
         Update();
         Render();
 
