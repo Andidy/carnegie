@@ -100,13 +100,9 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
 
     /*case WM_PAINT:
     {
-      PAINTSTRUCT Paint;
-      HDC DeviceContext = BeginPaint(Window, &Paint);
-      win32_WindowDimension dim = win32_GetWindowDimension(Window);
-      win32_UpdateWindow(&global_Backbuffer, DeviceContext, dim.width, dim.height);
-      EndPaint(Window, &Paint);
-    } break;
-    */
+      
+    } break;*/
+
     default:
     {
       Result = DefWindowProc(Window, Message, WParam, LParam);
@@ -362,7 +358,7 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
           win32_FillSoundBuffer(&soundstruct, byteToLock, bytesToWrite, &soundBuffer);
         }
 
-        Update();
+        Update(window);
         Render();
 
         #pragma region timing

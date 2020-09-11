@@ -110,7 +110,7 @@ u64 fenceValue[def_FrameCount];
 
 /* ------------------- RENDERING ------------------- */
 #pragma region Windows
-/*
+
 internal win32_WindowDimension win32_GetWindowDimension(HWND Window)
 {
   RECT clientRect;
@@ -121,7 +121,7 @@ internal win32_WindowDimension win32_GetWindowDimension(HWND Window)
   windowDimension.height = clientRect.bottom - clientRect.top;
   return windowDimension;
 }
-
+/*
 internal void win32_ResizeDIBSection(win32_OffscreenBuffer* buffer, i32 width, i32 height)
 {
   if (buffer->memory)
@@ -916,7 +916,7 @@ void Render()
   win32_CheckSucceeded(hr);
 }
 
-void Update()
+void Update(HWND window)
 {
   XMMATRIX rotXmat = XMMatrixRotationX(0.00001f);
   XMMATRIX rotYmat = XMMatrixRotationY(0.00002f);
@@ -928,6 +928,14 @@ void Update()
   XMMATRIX transmat = XMMatrixTranslationFromVector(XMLoadFloat4(&cube1pos));
   XMMATRIX worldmat = rotmat * transmat;
   XMStoreFloat4x4(&cube1worldmat, worldmat);
+
+  // rebuild proj matrix
+  win32_WindowDimension dim = win32_GetWindowDimension(window);
+  global_windowWidth = dim.width;
+  global_windowHeight = dim.height;
+  aspectRatio = (f32)global_windowWidth / (f32)global_windowHeight;
+  XMMATRIX tmpmat = XMMatrixPerspectiveFovLH(45.0f * (PI / 180.0f), aspectRatio, 0.1f, 1000.0f);
+  XMStoreFloat4x4(&projmat, tmpmat);
 
   XMMATRIX view = XMLoadFloat4x4(&viewmat);
   XMMATRIX proj = XMLoadFloat4x4(&projmat);
