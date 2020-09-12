@@ -111,48 +111,17 @@ u64 fenceValue[def_FrameCount];
 /* ------------------- RENDERING ------------------- */
 #pragma region Windows
 
-internal win32_WindowDimension win32_GetWindowDimension(HWND Window)
+internal win32_WindowDimension win32_GetWindowDimension(HWND window)
 {
   RECT clientRect;
-  GetClientRect(Window, &clientRect);
+  GetClientRect(window, &clientRect);
 
   win32_WindowDimension windowDimension;
   windowDimension.width = clientRect.right - clientRect.left;
   windowDimension.height = clientRect.bottom - clientRect.top;
   return windowDimension;
 }
-/*
-internal void win32_ResizeDIBSection(win32_OffscreenBuffer* buffer, i32 width, i32 height)
-{
-  if (buffer->memory)
-  {
-    VirtualFree(buffer->memory, 0, MEM_RELEASE);
-  }
 
-  buffer->width = width;
-  buffer->height = height;
-  buffer->bytesPerPixel = 4;
-
-  buffer->info.bmiHeader.biSize = sizeof(buffer->info.bmiHeader);
-  buffer->info.bmiHeader.biWidth = buffer->width;
-  buffer->info.bmiHeader.biHeight = -buffer->height;
-  buffer->info.bmiHeader.biPlanes = 1;
-  buffer->info.bmiHeader.biBitCount = 32;
-  buffer->info.bmiHeader.biCompression = BI_RGB;
-
-  i32 BitmapMemorySize = buffer->bytesPerPixel * buffer->width * buffer->height;
-  buffer->memory = VirtualAlloc(0, BitmapMemorySize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-  buffer->pitch = buffer->width * buffer->bytesPerPixel;
-  // Probably should clear to black;
-}
-
-void win32_UpdateWindow(win32_OffscreenBuffer* buffer, HDC DeviceContext, i32 windowWidth, i32 windowHeight)
-{
-  StretchDIBits(
-    DeviceContext, 0, 0, windowWidth, windowHeight,
-    0, 0, buffer->width, buffer->height, buffer->memory, &buffer->info, DIB_RGB_COLORS, SRCCOPY
-  );
-}*/
 #pragma endregion
 
 #pragma region D3D12
@@ -738,7 +707,7 @@ void InitD3D(HWND window)
   srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
   srvDesc.Texture2D.MipLevels = 1;
   device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
+  
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
