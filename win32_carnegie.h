@@ -2,31 +2,17 @@
 #define WIN32_CARNEGIE_H
 
 #include "ady_types.h"
-#include "carnegie.cpp"
+#include "carnegie.c"
 // ^^^^ Carnegie game and engine stuff
-
-//#ifndef WIN32_LEAN_AND_MEAN
-//#define WIN32_LEAN_AND_MEAN
-//#endif
 
 #include <windows.h>
 #include <xinput.h>
 #include <dsound.h>
 // ^^^^ Windows specific stuff
 
-#include <d3d12.h>
-#include <dxgi1_6.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
-#include "d3dx12.h"
-using namespace DirectX;
-// ^^^^ DirectX12
-
 #include <math.h>
 #include <stdio.h>
 // ^^^^ C libs
-
-#include "image_handling.cpp"
 
 /*
 
@@ -77,10 +63,10 @@ void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
 
 /* -------------------- MACROS --------------------- */
 
-#include "win32_input.cpp"
-#include "win32_fileio.cpp"
-#include "win32_sound.cpp"
-#include "win32_renderer.cpp"
+#include "win32_input.c"
+#include "win32_fileio.c"
+#include "win32_sound.c"
+#include "win32_renderer.c"
 
 // ^^^^ broken out funcitonality
 
