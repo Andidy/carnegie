@@ -43,7 +43,7 @@ internal void win32_InitDirectSound(HWND Window, i32 samplesPerSecond, i32 buffe
       waveFormat.nAvgBytesPerSec = waveFormat.nBlockAlign * waveFormat.nSamplesPerSec;
       waveFormat.cbSize = 0;
 
-      if (SUCCEEDED(directSound->lpVtbl->SetCooperativeLevel(directSound, Window, DSSCL_PRIORITY)))
+      if (SUCCEEDED(directSound->SetCooperativeLevel(Window, DSSCL_PRIORITY)))
       {
         DSBUFFERDESC bufferDescription = { 0 };
         bufferDescription.dwSize = sizeof(bufferDescription);
@@ -52,9 +52,9 @@ internal void win32_InitDirectSound(HWND Window, i32 samplesPerSecond, i32 buffe
 
         // Create a primary buffer
         LPDIRECTSOUNDBUFFER primaryBuffer;
-        if (SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &bufferDescription, &primaryBuffer, 0)))
+        if (SUCCEEDED(directSound->CreateSoundBuffer(&bufferDescription, &primaryBuffer, 0)))
         {
-          if (SUCCEEDED(primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &waveFormat)))
+          if (SUCCEEDED(primaryBuffer->SetFormat(&waveFormat)))
           {
             OutputDebugStringA("Primary Buffer Created Successfully\n");
           }
@@ -80,7 +80,7 @@ internal void win32_InitDirectSound(HWND Window, i32 samplesPerSecond, i32 buffe
       bufferDescription.dwBufferBytes = bufferSize;
       bufferDescription.lpwfxFormat = &waveFormat;
 
-      if (SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &bufferDescription, &win32_SecondarySoundBuffer, 0)))
+      if (SUCCEEDED(directSound->CreateSoundBuffer(&bufferDescription, &win32_SecondarySoundBuffer, 0)))
       {
         OutputDebugStringA("Secondary Buffer Created Successfully\n");
       }
@@ -103,8 +103,7 @@ internal void win32_FillSoundBuffer(win32_SoundStruct* soundstruct, DWORD byteTo
   DWORD r1size;
   void* region2;
   DWORD r2size;
-  if (SUCCEEDED(win32_SecondarySoundBuffer->lpVtbl->Lock(
-    win32_SecondarySoundBuffer,
+  if (SUCCEEDED(win32_SecondarySoundBuffer->Lock(
     byteToLock, bytesToWrite,
     &region1, &r1size, &region2, &r2size, 0
   )))
@@ -129,9 +128,7 @@ internal void win32_FillSoundBuffer(win32_SoundStruct* soundstruct, DWORD byteTo
       ++soundstruct->runningSampleIndex;
     }
 
-    win32_SecondarySoundBuffer->lpVtbl->Unlock(
-      win32_SecondarySoundBuffer, region1, r1size, region2, r2size
-    );
+    win32_SecondarySoundBuffer->Unlock(region1, r1size, region2, r2size);
   }
 }
 
@@ -141,8 +138,7 @@ internal void win32_ClearSoundBuffer(win32_SoundStruct* soundstruct)
   DWORD r1size;
   void* region2;
   DWORD r2size;
-  if (SUCCEEDED(win32_SecondarySoundBuffer->lpVtbl->Lock(
-    win32_SecondarySoundBuffer,
+  if (SUCCEEDED(win32_SecondarySoundBuffer->Lock(
     0, soundstruct->secondaryBufferSize,
     &region1, &r1size, &region2, &r2size, 0
   )))
@@ -160,10 +156,7 @@ internal void win32_ClearSoundBuffer(win32_SoundStruct* soundstruct)
       *dstSample++ = 0;
     }
 
-    win32_SecondarySoundBuffer->lpVtbl->Unlock(
-      win32_SecondarySoundBuffer,
-      region1, r1size, region2, r2size
-    );
+    win32_SecondarySoundBuffer->Unlock(region1, r1size, region2, r2size);
   }
 }
 #pragma endregion

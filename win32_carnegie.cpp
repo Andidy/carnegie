@@ -158,9 +158,7 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       soundstruct.latencySampleCount = soundstruct.samplesPerSecond / 15;
       win32_InitDirectSound(window, soundstruct.samplesPerSecond, soundstruct.secondaryBufferSize);
       win32_ClearSoundBuffer(&soundstruct);
-      win32_SecondarySoundBuffer->lpVtbl->Play(
-        win32_SecondarySoundBuffer, 0, 0, DSBPLAY_LOOPING
-      );
+      win32_SecondarySoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
       i16* samples = (i16*)VirtualAlloc(0, soundstruct.secondaryBufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
@@ -183,6 +181,15 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       gameMemory.data = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
       gameMemory.scratchsize = Gigabytes((u64)2);
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+      /* Enable D3D12 Debug layers */
+      hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
+      win32_CheckSucceeded(hr);
+
+      debugController->EnableDebugLayer();
+
+      // Init D3D12
+      InitD3D(window);
 
       // GAME LOOP ----------------------------------------------
 
@@ -318,8 +325,7 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
         DWORD targetCursor = 0;
         DWORD bytesToWrite = 0;
         b32 soundIsValid = false;
-        if (SUCCEEDED(win32_SecondarySoundBuffer->lpVtbl->GetCurrentPosition(
-          win32_SecondarySoundBuffer, &playCursor, &writeCursor)))
+        if (SUCCEEDED(win32_SecondarySoundBuffer->GetCurrentPosition(&playCursor, &writeCursor)))
         {
           byteToLock = (soundstruct.runningSampleIndex * soundstruct.bytesPerSample) % soundstruct.secondaryBufferSize;
 
@@ -351,6 +357,9 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
         {
           win32_FillSoundBuffer(&soundstruct, byteToLock, bytesToWrite, &soundBuffer);
         }
+
+        Update(window);
+        Render();
 
         #pragma region timing
         /*
