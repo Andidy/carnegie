@@ -34,20 +34,4 @@ internal win32_WindowDimension win32_GetWindowDimension(HWND window)
 
 #pragma region D3D11
 
-#include <d3d11.h>
-#include <dxgi1_6.h>
-
-typedef struct Renderer
-{
-  IDXGISwapChain* swapchain;
-  ID3D11Device* device;
-  ID3D11DeviceContext* deviceContext;
-  ID3D11RenderTargetView* renderTargetView;
-} Renderer;
-
-void InitRenderer(HINSTANCE instance)
-{
-
-}
-
 #pragma endregion
