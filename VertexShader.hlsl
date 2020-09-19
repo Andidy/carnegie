@@ -14,7 +14,7 @@ struct VS_OUTPUT
 
 cbuffer ConstantBuffer : register(b0)
 {
-	float4x4 mvp;
+	row_major float4x4 mvp;
 };
 
 VS_OUTPUT main(VS_INPUT input)

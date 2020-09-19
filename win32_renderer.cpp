@@ -2,22 +2,22 @@ ID3D12Debug* debugController;
 
 /* ------------------- RENDERING ------------------- */
 #pragma region WIN32
-/*typedef struct win32_OffscreenBuffer
-{
-  BITMAPINFO info;
-  void* memory;
-  i32 width;
-  i32 height;
-  i32 pitch;
-  i32 bytesPerPixel;
-} win32_OffscreenBuffer;
-global win32_OffscreenBuffer global_Backbuffer;
-*/
 typedef struct win32_WindowDimension
 {
   i32 width;
   i32 height;
 } win32_WindowDimension;
+
+internal win32_WindowDimension win32_GetWindowDimension(HWND window)
+{
+  RECT clientRect;
+  GetClientRect(window, &clientRect);
+
+  win32_WindowDimension windowDimension;
+  windowDimension.width = clientRect.right - clientRect.left;
+  windowDimension.height = clientRect.bottom - clientRect.top;
+  return windowDimension;
+}
 #pragma endregion
 
 #pragma region D3D12
@@ -78,20 +78,26 @@ ConstantBufferPerObject cbPerObject;
 ID3D12Resource* constantBufferUploadHeaps[frameCount];
 u8* cbvGPUAddess[frameCount];
 
+// camera ---
 XMFLOAT4X4 projmat;
 XMFLOAT4X4 viewmat;
 
 XMFLOAT4 cameraPos;
 XMFLOAT4 cameraTarget;
 XMFLOAT4 cameraUp;
+// camera ---
 
+// cube 1 ---
 XMFLOAT4X4 cube1worldmat;
 XMFLOAT4X4 cube1rotmat;
 XMFLOAT4 cube1pos;
+// cube 1 ---
 
+// cube 2 ---
 XMFLOAT4X4 cube2worldmat;
 XMFLOAT4X4 cube2rotmat;
 XMFLOAT4 cube2offset;
+// cube 2 ---
 
 i32 numCubeIndices;
 
@@ -105,26 +111,7 @@ HANDLE fenceEvent;
 ID3D12Fence* fence[def_FrameCount];
 u64 fenceValue[def_FrameCount];
 
-#pragma endregion
-/* ------------------- RENDERING ------------------- */
 
-/* ------------------- RENDERING ------------------- */
-#pragma region Windows
-
-internal win32_WindowDimension win32_GetWindowDimension(HWND window)
-{
-  RECT clientRect;
-  GetClientRect(window, &clientRect);
-
-  win32_WindowDimension windowDimension;
-  windowDimension.width = clientRect.right - clientRect.left;
-  windowDimension.height = clientRect.bottom - clientRect.top;
-  return windowDimension;
-}
-
-#pragma endregion
-
-#pragma region D3D12
 
 void WaitForPreviousFrame()
 {
@@ -887,6 +874,25 @@ void Render()
 
 void Update(HWND window)
 {
+  // build vp matrix ---
+  // this can be used for all objects in the world
+
+  // (handles window resize)
+  win32_WindowDimension dim = win32_GetWindowDimension(window);
+  global_windowWidth = dim.width;
+  global_windowHeight = dim.height;
+  aspectRatio = (f32)global_windowWidth / (f32)global_windowHeight;
+  
+  XMMATRIX proj = XMMatrixPerspectiveFovLH(45.0f * (PI / 180.0f), aspectRatio, 0.1f, 1000.0f);
+  XMStoreFloat4x4(&projmat, proj);
+
+  // load global view matrix to local var
+  XMMATRIX view = XMLoadFloat4x4(&viewmat);
+  XMMATRIX vp = view * proj;
+  // build vp matrix ---
+
+  // ------------ CUBE 1 --------------
+  // rotate cube 1 ---
   XMMATRIX rotXmat = XMMatrixRotationX(0.00001f);
   XMMATRIX rotYmat = XMMatrixRotationY(0.00002f);
   XMMATRIX rotZmat = XMMatrixRotationZ(0.00003f);
@@ -897,23 +903,16 @@ void Update(HWND window)
   XMMATRIX transmat = XMMatrixTranslationFromVector(XMLoadFloat4(&cube1pos));
   XMMATRIX worldmat = rotmat * transmat;
   XMStoreFloat4x4(&cube1worldmat, worldmat);
+  // rotate cube 1 ---
 
-  // rebuild proj matrix
-  win32_WindowDimension dim = win32_GetWindowDimension(window);
-  global_windowWidth = dim.width;
-  global_windowHeight = dim.height;
-  aspectRatio = (f32)global_windowWidth / (f32)global_windowHeight;
-  XMMATRIX tmpmat = XMMatrixPerspectiveFovLH(45.0f * (PI / 180.0f), aspectRatio, 0.1f, 1000.0f);
-  XMStoreFloat4x4(&projmat, tmpmat);
-
-  XMMATRIX view = XMLoadFloat4x4(&viewmat);
-  XMMATRIX proj = XMLoadFloat4x4(&projmat);
-  XMMATRIX mvp = XMLoadFloat4x4(&cube1worldmat) * view * proj;
-  XMMATRIX transposed = XMMatrixTranspose(mvp);
-  XMStoreFloat4x4(&cbPerObject.mvp, transposed);
-
+  // build mvp matrix for cube 1 and send to gpu ---
+  XMMATRIX mvp = XMLoadFloat4x4(&cube1worldmat) * vp;
+  XMStoreFloat4x4(&cbPerObject.mvp, mvp);
   memcpy(cbvGPUAddess[frameIndex], &cbPerObject, sizeof(cbPerObject));
+  // build mvp matrix for cube 1 and send to gpu ---
 
+  // ------------ CUBE 2 -------------------
+  // rotate, translate, and scale cube 2 ---
   rotXmat = XMMatrixRotationX(0.00003f);
   rotYmat = XMMatrixRotationY(0.00002f);
   rotZmat = XMMatrixRotationZ(0.00001f);
@@ -925,13 +924,14 @@ void Update(HWND window)
   XMMATRIX scalemat = XMMatrixScaling(0.5f, 0.5f, 0.5f);
 
   worldmat = scalemat * transoffsetmat * rotmat * transmat;
-
-  mvp = XMLoadFloat4x4(&cube2worldmat) * view * proj;
-  transposed = XMMatrixTranspose(mvp);
-  XMStoreFloat4x4(&cbPerObject.mvp, transposed);
-
-  memcpy(cbvGPUAddess[frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   XMStoreFloat4x4(&cube2worldmat, worldmat);
+  // rotate, translate, and scale cube 2 ---
+
+  // build mvp matrix for cube 2 and send to gpu ---
+  mvp = XMLoadFloat4x4(&cube2worldmat) * vp;
+  XMStoreFloat4x4(&cbPerObject.mvp, mvp);
+  memcpy(cbvGPUAddess[frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+  // build mvp matrix for cube 2 and send to gpu ---
 }
 
 #pragma endregion
