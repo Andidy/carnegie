@@ -125,18 +125,18 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
   */
   
   // Windows Window
-  WNDCLASSA WindowClass = {0};
-  WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; 
-  WindowClass.lpfnWndProc = win32_MainWindowCallback;
-  WindowClass.hInstance = instance;
+  WNDCLASSA windowClass = {0};
+  windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; 
+  windowClass.lpfnWndProc = win32_MainWindowCallback;
+  windowClass.hInstance = instance;
   // WindowClass.hIcon = ;
-  WindowClass.lpszClassName = "CarnegieWindowClass";
+  windowClass.lpszClassName = "CarnegieWindowClass";
 
-  if(RegisterClass(&WindowClass))
+  if(RegisterClass(&windowClass))
   {
     HWND window = CreateWindowExA(
       0,
-      WindowClass.lpszClassName,
+      windowClass.lpszClassName,
       "Project Carnegie",
       WS_OVERLAPPEDWINDOW | WS_VISIBLE,
       CW_USEDEFAULT, CW_USEDEFAULT,
