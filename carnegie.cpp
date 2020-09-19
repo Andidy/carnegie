@@ -1,9 +1,5 @@
 #include "carnegie.h"
 
-/* --------------- RENDERING --------------- */
-
-/* --------------- RENDERING --------------- */
-
 /* --------------- SOUND --------------- */
 #define PI 3.14159265359f
 internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)

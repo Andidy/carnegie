@@ -2,11 +2,11 @@
 
 u32 counter = 0;
 
-LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
+LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
 {
-  LRESULT Result = 0;
+  LRESULT result = 0;
   
-  switch(Message)
+  switch(message)
   {
     case WM_SIZE:
     {
@@ -35,9 +35,9 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
     case WM_SYSKEYUP:
     case WM_SYSKEYDOWN:
     {
-      u32 vkCode = (u32)WParam;
-      b32 wasDown = ((LParam & (1 << 30)) != 0);
-      b32 isDown = ((LParam & (1 << 31)) == 0);
+      u32 vkCode = (u32)wparam;
+      b32 wasDown = ((lparam & (1 << 30)) != 0);
+      b32 isDown = ((lparam & (1 << 31)) == 0);
 
       if (isDown != wasDown)
       {
@@ -91,7 +91,7 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
         }
       }
 
-      b32 altKeyDown = ((LParam & (1 << 29)) != 0);
+      b32 altKeyDown = ((lparam & (1 << 29)) != 0);
       if ((vkCode == VK_F4) && altKeyDown)
       {
         win32_running = false;
@@ -105,14 +105,14 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND Window, UINT Message, WPARAM WPar
 
     default:
     {
-      Result = DefWindowProc(Window, Message, WParam, LParam);
+      result = DefWindowProc(window, message, wparam, lparam);
     } break;
   }
   
-  return Result;
+  return result;
 }
 
-i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int CmdShow)
+i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow)
 {
   /* XINPUT Function Pointers to handle LIB/DLL Loading */
   win32_LoadXInput();
@@ -128,7 +128,7 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
   WNDCLASSA WindowClass = {0};
   WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; 
   WindowClass.lpfnWndProc = win32_MainWindowCallback;
-  WindowClass.hInstance = Instance;
+  WindowClass.hInstance = instance;
   // WindowClass.hIcon = ;
   WindowClass.lpszClassName = "CarnegieWindowClass";
 
@@ -141,7 +141,7 @@ i32 CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, 
       WS_OVERLAPPEDWINDOW | WS_VISIBLE,
       CW_USEDEFAULT, CW_USEDEFAULT,
       global_windowWidth, global_windowHeight,
-      0, 0, Instance, 0
+      0, 0, instance, 0
     );
 
     if(window)
