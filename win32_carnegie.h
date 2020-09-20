@@ -26,7 +26,7 @@ using namespace DirectX;
 #include <stdio.h>
 // ^^^^ C libs
 
-#include "image_handling.cpp"
+#include "win32_renderer_image_loading.cpp"
 
 /*
 
@@ -80,6 +80,8 @@ void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
 #include "win32_input.cpp"
 #include "win32_fileio.cpp"
 #include "win32_sound.cpp"
+
+#include "win32_renderer_texture.cpp"
 #include "win32_renderer.cpp"
 
 // ^^^^ broken out funcitonality
