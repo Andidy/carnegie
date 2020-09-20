@@ -85,6 +85,44 @@ typedef struct game_ControllerState
   };
 } game_ControllerState;
 
+typedef struct game_KeyboardState
+{
+  union
+  {
+    struct
+    {
+      game_ButtonState a;
+      game_ButtonState b;
+      game_ButtonState c;
+      game_ButtonState d;
+      game_ButtonState e;
+      game_ButtonState f;
+      game_ButtonState g;
+      game_ButtonState h;
+      game_ButtonState i;
+      game_ButtonState j;
+      game_ButtonState k;
+      game_ButtonState l;
+      game_ButtonState m;
+      game_ButtonState n;
+      game_ButtonState o;
+      game_ButtonState p;
+      game_ButtonState q;
+      game_ButtonState r;
+      game_ButtonState s;
+      game_ButtonState t;
+      game_ButtonState u;
+      game_ButtonState v;
+      game_ButtonState w;
+      game_ButtonState x;
+      game_ButtonState y;
+      game_ButtonState z;
+    };
+
+    game_ButtonState buttons[26];
+  };
+} game_KeyboardState;
+
 typedef struct game_Input
 {
   game_ControllerState controllers[4];

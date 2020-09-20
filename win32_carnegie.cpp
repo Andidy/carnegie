@@ -35,67 +35,7 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wpar
     case WM_SYSKEYUP:
     case WM_SYSKEYDOWN:
     {
-      u32 vkCode = (u32)wparam;
-      b32 wasDown = ((lparam & (1 << 30)) != 0);
-      b32 isDown = ((lparam & (1 << 31)) == 0);
-
-      if (isDown != wasDown)
-      {
-        if (vkCode == 'W')
-        {
-          OutputDebugStringA("W: ");
-          if (isDown)
-          {
-            OutputDebugStringA("is Down\n");
-          }
-          if (wasDown)
-          {
-            OutputDebugStringA("was Down\n");
-          }
-        }
-        if (vkCode == 'A')
-        {
-
-        }
-        if (vkCode == 'S')
-        {
-
-        }
-        if (vkCode == 'D')
-        {
-
-        }
-        if (vkCode == VK_UP)
-        {
-
-        }
-        if (vkCode == VK_DOWN)
-        {
-
-        }
-        if (vkCode == VK_LEFT)
-        {
-
-        }
-        if (vkCode == VK_RIGHT)
-        {
-
-        }
-        if (vkCode == VK_SPACE)
-        {
-
-        }
-        if (vkCode == VK_ESCAPE)
-        {
-
-        }
-      }
-
-      b32 altKeyDown = ((lparam & (1 << 29)) != 0);
-      if ((vkCode == VK_F4) && altKeyDown)
-      {
-        win32_running = false;
-      }
+      win32_Assert("Keyboard event in windows callback function");
     } break;
 
     /*case WM_PAINT:
@@ -198,16 +138,16 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         ++counter;
         
         // Input
-        MSG Message;
-        while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
+        MSG message;
+        while(PeekMessage(&message, 0, 0, 0, PM_REMOVE))
         {
-          if (Message.message == WM_QUIT)
+          if (message.message == WM_QUIT)
           {
             win32_running = false;
           }
 
-          TranslateMessage(&Message);
-          DispatchMessage(&Message);
+          TranslateMessage(&message);
+          DispatchMessage(&message);
         }
 
         // should we poll more frequently?
