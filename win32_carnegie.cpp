@@ -290,7 +290,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         soundBuffer.sampleCount = bytesToWrite / soundstruct.bytesPerSample;
         soundBuffer.samples = samples;
 
-        GameUpdateAndRender(&gameMemory, newInput, &soundBuffer);
+        GameUpdateAndPrepareRenderData(&gameMemory, newInput, &soundBuffer);
 
         // Direct Sound Test Continued
         if(soundIsValid)

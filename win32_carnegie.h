@@ -84,6 +84,6 @@ void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
 #include "win32_renderer_texture.cpp"
 #include "win32_renderer.cpp"
 
-// ^^^^ broken out funcitonality
+// ^^^^ broken out platform layer funcitonality
 
 #endif

@@ -4,6 +4,8 @@
 #include "ady_types.h"
 #include <math.h>
 
+#include "entity.h"
+
 // Macros //
 #define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
 
@@ -14,11 +16,11 @@
 #define Assert(val) if(!(val)) {*(int *)0 = 0;}
 
 // PLATFORM LAYER -> GAME //
-typedef struct dev_ReadFileResult
+struct dev_ReadFileResult
 {
   u64 size;
   void* data;
-} dev_ReadFileResult;
+};
 
 internal dev_ReadFileResult dev_ReadFile(char *filename);
 internal void dev_FreeFile(void *memory);
@@ -28,20 +30,20 @@ internal b32 dev_WriteFile(char *filename, u32 memorySize, void *memory);
 
 // Input, Render Buffer, Timing, Sound Buffer
 
-typedef struct game_SoundBuffer
+struct game_SoundBuffer
 {
   i32 samplesPerSecond;
   i32 sampleCount;
   i16* samples;
-} game_SoundBuffer;
+};
 
-typedef struct game_ButtonState
+struct game_ButtonState
 {
   i32 transitionCount;
   b32 endedDown;
-} game_ButtonState;
+};
 
-typedef struct game_ControllerState
+struct game_ControllerState
 {
   b32 isAnalog;
   f32 lstartx;
@@ -87,7 +89,7 @@ typedef struct game_ControllerState
   };
 } game_ControllerState;
 
-typedef struct game_KeyboardState
+struct game_KeyboardState
 {
   union
   {
@@ -119,35 +121,40 @@ typedef struct game_KeyboardState
       game_ButtonState x;
       game_ButtonState y;
       game_ButtonState z;
+
+      game_ButtonState up;
+      game_ButtonState down;
+      game_ButtonState left;
+      game_ButtonState right;
     };
 
-    game_ButtonState buttons[26];
+    game_ButtonState buttons[30];
   };
 } game_KeyboardState;
 
-typedef struct game_Input
+struct game_Input
 {
   game_ControllerState controllers[4];
-} game_Input;
+};
 
-typedef struct game_Memory
+struct game_Memory
 {
   b32 isInitialized;
   u64 size;
   void* data; // NOTE: Must be cleared to ZERO at startup
   u64 scratchsize;
   void* scratchdata; // NOTE: Must be cleared to ZERO at startup
-} game_Memory;
+};
 
-internal void GameUpdateAndRender(game_Memory* game_Memory, game_Input* Input, game_SoundBuffer* soundBuffer);
+internal void GameUpdateAndPrepareRenderData(game_Memory* game_Memory, game_Input* Input, game_SoundBuffer* soundBuffer);
 
 /* Game Only */
 
-typedef struct game_State
+struct game_State
 {
   i32 xoff;
   i32 yoff;
   i32 toneHertz;
-} game_State;
+};
 
 #endif

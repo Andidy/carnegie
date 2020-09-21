@@ -22,7 +22,7 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 /* --------------- SOUND --------------- */
 
-internal void GameUpdateAndRender(game_Memory *gameMemory, game_Input *Input, game_SoundBuffer *soundBuffer)
+internal void GameUpdateAndPrepareRenderData(game_Memory *gameMemory, game_Input *Input, game_SoundBuffer *soundBuffer)
 {
   game_State* gameState = (game_State *)gameMemory->data;
   if (!gameMemory->isInitialized)
