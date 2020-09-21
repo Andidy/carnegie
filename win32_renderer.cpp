@@ -271,6 +271,7 @@ void InitD3D(HWND window)
 
 
 
+
   // Create RootSignature
   // Create a root descriptor
   D3D12_ROOT_DESCRIPTOR rootCBVDescriptor = { 0 };
