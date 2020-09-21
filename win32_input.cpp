@@ -53,10 +53,10 @@ internal void win32_ProcessKeyboardMessage(game_ButtonState *newState, b32 isDow
 {
   win32_Assert(newState->endedDown != isDown);
   newState->endedDown = isDown;
-  ++newState->transitionCount;
+  newState->transitionCount += 1;
 }
 
-internal void win32_UpdateInput()
+internal void win32_UpdateInput(game_Input* gameInput)
 {
   MSG message;
   while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -83,35 +83,35 @@ internal void win32_UpdateInput()
           {
             case 'W':
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.w, isDown);
             } break;
             case 'A':
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.a, isDown);
             } break;
             case 'S':
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.s, isDown);
             } break;
             case 'D':
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.d, isDown);
             } break;
             case VK_UP:
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.up, isDown);
             } break;
             case VK_DOWN:
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.down, isDown);
             } break;
             case VK_LEFT:
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.left, isDown);
             } break;
             case VK_RIGHT:
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.right, isDown);
             } break;
             case VK_SPACE:
             {

@@ -4,7 +4,7 @@
 #include "ady_types.h"
 #include <math.h>
 
-#include "entity.h"
+#include "game_entity.h"
 
 // Macros //
 #define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
@@ -87,7 +87,7 @@ struct game_ControllerState
       game_ButtonState select;
     };
   };
-} game_ControllerState;
+};
 
 struct game_KeyboardState
 {
@@ -130,11 +130,11 @@ struct game_KeyboardState
 
     game_ButtonState buttons[30];
   };
-} game_KeyboardState;
+};
 
 struct game_Input
 {
-  game_ControllerState controllers[4];
+  game_KeyboardState keyboard;
 };
 
 struct game_Memory
@@ -155,6 +155,8 @@ struct game_State
   i32 xoff;
   i32 yoff;
   i32 toneHertz;
+
+  Entity entities[2];
 };
 
 #endif
