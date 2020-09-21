@@ -4,7 +4,7 @@
 #include "ady_types.h"
 #include <math.h>
 
-/* Macros */
+// Macros //
 #define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
 
 #define Kilobytes(val) (1024 * (val))
@@ -12,17 +12,19 @@
 #define Gigabytes(val) (1024 * Megabytes(val))
 
 #define Assert(val) if(!(val)) {*(int *)0 = 0;}
-/* PLATFORM LAYER -> GAME */
+
+// PLATFORM LAYER -> GAME //
 typedef struct dev_ReadFileResult
 {
   u64 size;
   void* data;
 } dev_ReadFileResult;
+
 internal dev_ReadFileResult dev_ReadFile(char *filename);
 internal void dev_FreeFile(void *memory);
 internal b32 dev_WriteFile(char *filename, u32 memorySize, void *memory);
 
-/* GAME -> PLATFORM LAYER */
+// GAME -> PLATFORM LAYER //
 
 // Input, Render Buffer, Timing, Sound Buffer
 
