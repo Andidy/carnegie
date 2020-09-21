@@ -55,16 +55,33 @@ static const UINT frameCount = def_FrameCount;
 // Pipeline objects
 D3D12_VIEWPORT viewport;
 D3D12_RECT scissorRect;
+
 IDXGISwapChain3* swapchain;
 ID3D12Device* device;
-ID3D12Resource* renderTargets[def_FrameCount];
+
 ID3D12CommandAllocator* commandAllocator[def_FrameCount];
 ID3D12CommandQueue* commandQueue;
-ID3D12RootSignature* rootSignature;
-ID3D12DescriptorHeap* rtvHeap;
-ID3D12PipelineState* pipelineStateObject;
 ID3D12GraphicsCommandList* commandList;
+
+ID3D12Resource* renderTargets[def_FrameCount];
+ID3D12DescriptorHeap* rtvHeap;
 UINT rtvDescSize;
+
+
+struct Renderer
+{
+  // --- Input Data for GPU ---
+  // rootSig and pso should be made into arrays and expanded as neccesary
+  ID3D12RootSignature* rootSignature;
+  ID3D12PipelineState* pipelineStateObject;
+
+  // synchronization objects
+  UINT frameIndex;
+  HANDLE fenceEvent;
+  ID3D12Fence* fence[def_FrameCount];
+  u64 fenceValue[def_FrameCount];
+};
+Renderer renderer;
 
 // app resources
 ID3D12Resource* vertexBuffer;
@@ -105,12 +122,6 @@ ID3D12Resource* textureBuffer;
 ID3D12DescriptorHeap* mainDescriptorHeap;
 ID3D12Resource* textureBufferUploadHeap;
 
-// synchronization objects
-UINT frameIndex;
-HANDLE fenceEvent;
-ID3D12Fence* fence[def_FrameCount];
-u64 fenceValue[def_FrameCount];
-
 
 
 void WaitForPreviousFrame()
@@ -118,22 +129,22 @@ void WaitForPreviousFrame()
   hr = 0;
 
   // swap current rtv buffer index so we draw on the correct buffer
-  frameIndex = swapchain->GetCurrentBackBufferIndex();
+  renderer.frameIndex = swapchain->GetCurrentBackBufferIndex();
 
   // if the current fence value is less than "fenceValue"
   // then we know the GPU has not finished executing the command queue
   // since it has not reached the commandQueue->Signal() command
-  if (fence[frameIndex]->GetCompletedValue() < fenceValue[frameIndex])
+  if (renderer.fence[renderer.frameIndex]->GetCompletedValue() < renderer.fenceValue[renderer.frameIndex])
   {
-    hr = fence[frameIndex]->SetEventOnCompletion(fenceValue[frameIndex], fenceEvent);
+    hr = renderer.fence[renderer.frameIndex]->SetEventOnCompletion(renderer.fenceValue[renderer.frameIndex], renderer.fenceEvent);
     win32_CheckSucceeded(hr);
 
     // we will wait until the fence has triggered the event to proceed
-    WaitForSingleObject(fenceEvent, INFINITE);
+    WaitForSingleObject(renderer.fenceEvent, INFINITE);
   }
 
   // increment fence value for the next frame
-  fenceValue[frameIndex]++;
+  renderer.fenceValue[renderer.frameIndex]++;
 }
 
 void InitD3D(HWND window)
@@ -201,7 +212,7 @@ void InitD3D(HWND window)
   win32_CheckSucceeded(hr);
 
   swapchain = (IDXGISwapChain3*)(swapchain1);
-  frameIndex = swapchain->GetCurrentBackBufferIndex();
+  renderer.frameIndex = swapchain->GetCurrentBackBufferIndex();
 
   /* Create the backbuffers (rtvs) Descriptor Heap */
   // Create Descriptor Heap
@@ -244,18 +255,21 @@ void InitD3D(HWND window)
   // Create Fences & Fence Events
   for (i32 i = 0; i < frameCount; i++)
   {
-    hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[i]));
+    hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&renderer.fence[i]));
     win32_CheckSucceeded(hr);
-    fenceValue[i] = 0;
+    renderer.fenceValue[i] = 0;
   }
 
   // Create an event handle to use for frame synchronization
-  fenceEvent = CreateEvent(0, false, false, 0);
-  if (fenceEvent == 0)
+  renderer.fenceEvent = CreateEvent(0, false, false, 0);
+  if (renderer.fenceEvent == 0)
   {
     hr = HRESULT_FROM_WIN32(GetLastError());
     win32_CheckSucceeded(hr);
   }
+
+
+
 
   // Create RootSignature
   // Create a root descriptor
@@ -318,7 +332,7 @@ void InitD3D(HWND window)
   hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, 0);
   win32_CheckSucceeded(hr);
 
-  hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+  hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&renderer.rootSignature));
   win32_CheckSucceeded(hr);
 
   // create vertex and pixel shaders
@@ -391,7 +405,7 @@ void InitD3D(HWND window)
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
   psoDesc.InputLayout = inputLayoutDesc;
-  psoDesc.pRootSignature = rootSignature;
+  psoDesc.pRootSignature = renderer.rootSignature;
   psoDesc.VS = vertexShaderBytecode;
   psoDesc.PS = pixelShaderBytecode;
   psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -403,7 +417,7 @@ void InitD3D(HWND window)
   psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
   psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
   psoDesc.NumRenderTargets = 1;
-  hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
+  hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&renderer.pipelineStateObject));
   win32_CheckSucceeded(hr);
 
   // Create vertex buffer
@@ -635,8 +649,8 @@ void InitD3D(HWND window)
   commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
   // increment the fence value now, otherwise the buffer might not be uploaded by time we start drawing
-  fenceValue[frameIndex]++;
-  hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
+  renderer.fenceValue[renderer.frameIndex]++;
+  hr = commandQueue->Signal(renderer.fence[renderer.frameIndex], renderer.fenceValue[renderer.frameIndex]);
   win32_CheckSucceeded(hr);
 
   // done with image data so we can free it
@@ -708,7 +722,7 @@ void UpdatePipeline()
 
   WaitForPreviousFrame();
 
-  hr = commandAllocator[frameIndex]->Reset();
+  hr = commandAllocator[renderer.frameIndex]->Reset();
   win32_CheckSucceeded(hr);
 
   // reset the command list. by resetting the command list we are putting it into
@@ -721,20 +735,20 @@ void UpdatePipeline()
   // but in this tutorial we are only clearing the rtv, and do not actually need
   // anything but an initial default pipeline, which is what we get by setting
   // the second parameter to NULL
-  hr = commandList->Reset(commandAllocator[frameIndex], pipelineStateObject);
+  hr = commandList->Reset(commandAllocator[renderer.frameIndex], renderer.pipelineStateObject);
   win32_CheckSucceeded(hr);
 
   D3D12_RESOURCE_BARRIER resourceBarrier = { 0 };
   resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
   resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
   resourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-  resourceBarrier.Transition.pResource = renderTargets[frameIndex];
+  resourceBarrier.Transition.pResource = renderTargets[renderer.frameIndex];
   resourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
   resourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
   commandList->ResourceBarrier(1, &resourceBarrier);
 
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-  cpuDescriptorHandle.ptr = (SIZE_T)(((INT64)cpuDescriptorHandle.ptr) + ((INT64)frameIndex) * ((INT64)rtvDescSize));
+  cpuDescriptorHandle.ptr = (SIZE_T)(((INT64)cpuDescriptorHandle.ptr) + ((INT64)renderer.frameIndex) * ((INT64)rtvDescSize));
 
   D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsDescHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -743,7 +757,7 @@ void UpdatePipeline()
   commandList->ClearRenderTargetView(cpuDescriptorHandle, clearColor, 0, 0);
   commandList->ClearDepthStencilView(dsDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, 0);
 
-  commandList->SetGraphicsRootSignature(rootSignature);
+  commandList->SetGraphicsRootSignature(renderer.rootSignature);
 
   // set the descriptor heap
   ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
@@ -760,11 +774,11 @@ void UpdatePipeline()
   commandList->IASetIndexBuffer(&indexBufferView);
 
   // first cube
-  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress());
   commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
 
   // second cube
-  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
 
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
@@ -772,7 +786,7 @@ void UpdatePipeline()
   resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
   resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
   resourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-  resourceBarrier.Transition.pResource = renderTargets[frameIndex];
+  resourceBarrier.Transition.pResource = renderTargets[renderer.frameIndex];
   resourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
   resourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
   commandList->ResourceBarrier(1, &resourceBarrier);
@@ -797,7 +811,7 @@ void Render()
   // we will know when our command queue had finished because
   // the fence value will be set to "fenceValue" variable from the GPU
   // since the command queue is being executed on the GPU
-  hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
+  hr = commandQueue->Signal(renderer.fence[renderer.frameIndex], renderer.fenceValue[renderer.frameIndex]);
   win32_CheckSucceeded(hr);
 
   // present the current back buffer
@@ -841,7 +855,7 @@ void Update(HWND window)
   // build mvp matrix for cube 1 and send to gpu ---
   XMMATRIX mvp = XMLoadFloat4x4(&cube1worldmat) * vp;
   XMStoreFloat4x4(&cbPerObject.mvp, mvp);
-  memcpy(cbvGPUAddess[frameIndex], &cbPerObject, sizeof(cbPerObject));
+  memcpy(cbvGPUAddess[renderer.frameIndex], &cbPerObject, sizeof(cbPerObject));
   // build mvp matrix for cube 1 and send to gpu ---
 
   // ------------ CUBE 2 -------------------
@@ -863,7 +877,7 @@ void Update(HWND window)
   // build mvp matrix for cube 2 and send to gpu ---
   mvp = XMLoadFloat4x4(&cube2worldmat) * vp;
   XMStoreFloat4x4(&cbPerObject.mvp, mvp);
-  memcpy(cbvGPUAddess[frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+  memcpy(cbvGPUAddess[renderer.frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   // build mvp matrix for cube 2 and send to gpu ---
 }
 
