@@ -2,6 +2,7 @@
 #define CARNEGIE_H
 
 #include "ady_types.h"
+#include "ady_math.h"
 #include <math.h>
 
 #include "game_entity.h"

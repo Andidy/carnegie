@@ -190,7 +190,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
           win32_FillSoundBuffer(&soundstruct, byteToLock, bytesToWrite, &soundBuffer);
         }
 
-        Update(window);
+        Update(window, &gameMemory);
         Render();
 
         #pragma region timing

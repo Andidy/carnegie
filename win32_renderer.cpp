@@ -35,7 +35,7 @@ struct Vertex
 
 struct ConstantBufferPerObject
 {
-  XMFLOAT4X4 mvp;
+  mat4 mvp;
 };
 
 // Constant buffers must be 256-byte aligned which has to do with constant reads on the GPU.
@@ -96,24 +96,20 @@ ID3D12Resource* constantBufferUploadHeaps[frameCount];
 u8* cbvGPUAddess[frameCount];
 
 // camera ---
-XMFLOAT4X4 projmat;
-XMFLOAT4X4 viewmat;
+mat4 projmat;
+mat4 viewmat;
 
-XMFLOAT4 cameraPos;
-XMFLOAT4 cameraTarget;
-XMFLOAT4 cameraUp;
+vec3 cameraPos;
+vec3 cameraTarget;
+vec3 cameraUp;
 // camera ---
 
 // cube 1 ---
-XMFLOAT4X4 cube1worldmat;
-XMFLOAT4X4 cube1rotmat;
-XMFLOAT4 cube1pos;
+//XMFLOAT4 cube1pos;
 // cube 1 ---
 
 // cube 2 ---
-XMFLOAT4X4 cube2worldmat;
-XMFLOAT4X4 cube2rotmat;
-XMFLOAT4 cube2offset;
+//XMFLOAT4 cube2offset;
 // cube 2 ---
 
 i32 numCubeIndices;
@@ -682,37 +678,17 @@ void InitD3D(HWND window)
 
 
   // build proj and view matrix
-  XMMATRIX tmpmat = XMMatrixPerspectiveFovLH(45.0f * (PI / 180.0f), aspectRatio, 0.1f, 1000.0f);
-  XMStoreFloat4x4(&projmat, tmpmat);
+  mat4 tmpmat = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
+  projmat = tmpmat;
 
   // set starting camera state
-  cameraPos = XMFLOAT4(0.0f, 2.0f, -4.0f, 0.0f);
-  cameraTarget = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-  cameraUp = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
+  cameraPos = Vec3(0.0f, 2.0f, -4.0f);
+  cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
+  cameraUp = Vec3(0.0f, 1.0f, 0.0f);
 
   // view matrix
-  XMVECTOR cpos = XMLoadFloat4(&cameraPos);
-  XMVECTOR cTarg = XMLoadFloat4(&cameraTarget);
-  XMVECTOR cUp = XMLoadFloat4(&cameraUp);
-  tmpmat = XMMatrixLookAtLH(cpos, cTarg, cUp);
-  XMStoreFloat4x4(&viewmat, tmpmat);
-
-  // set cube initial positions
-  // cube1
-  cube1pos = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-  XMVECTOR posvec = XMLoadFloat4(&cube1pos);
-
-  tmpmat = XMMatrixTranslationFromVector(posvec);
-  XMStoreFloat4x4(&cube1rotmat, XMMatrixIdentity());
-  XMStoreFloat4x4(&cube1worldmat, tmpmat);
-
-  // cube2
-  cube2offset = XMFLOAT4(1.5f, 0.0f, 0.0f, 0.0f);
-  posvec = XMLoadFloat4(&cube2offset) + XMLoadFloat4(&cube1pos);
-
-  tmpmat = XMMatrixTranslationFromVector(posvec);
-  XMStoreFloat4x4(&cube2rotmat, XMMatrixIdentity());
-  XMStoreFloat4x4(&cube2worldmat, tmpmat);
+  tmpmat = LookAtMat(cameraPos, cameraTarget, cameraUp);
+  viewmat = tmpmat;
 
   OutputDebugStringA("Successfully Initialized D3D\n");
 }
@@ -820,7 +796,7 @@ void Render()
   win32_CheckSucceeded(hr);
 }
 
-void Update(HWND window)
+void Update(HWND window, game_Memory* gameMemory)
 {
   // build vp matrix ---
   // this can be used for all objects in the world
@@ -831,55 +807,48 @@ void Update(HWND window)
   global_windowHeight = dim.height;
   aspectRatio = (f32)global_windowWidth / (f32)global_windowHeight;
   
-  XMMATRIX proj = XMMatrixPerspectiveFovLH(45.0f * (PI / 180.0f), aspectRatio, 0.1f, 1000.0f);
-  XMStoreFloat4x4(&projmat, proj);
+  mat4 proj = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
+  projmat = proj;
 
   // load global view matrix to local var
-  XMMATRIX view = XMLoadFloat4x4(&viewmat);
-  XMMATRIX vp = view * proj;
+  mat4 view = viewmat;
+  mat4 vp = MulMat(view, proj);
   // build vp matrix ---
 
   // ------------ CUBE 1 --------------
-  // rotate cube 1 ---
-  XMMATRIX rotXmat = XMMatrixRotationX(0.00001f);
-  XMMATRIX rotYmat = XMMatrixRotationY(0.00002f);
-  XMMATRIX rotZmat = XMMatrixRotationZ(0.00003f);
+  game_State* gameState = (game_State*)gameMemory->data;
+  //cube1pos.x = gameState->entities[0].pos.x;
+  //cube1pos.y = gameState->entities[0].pos.y;
+  //cube1pos.z = gameState->entities[0].pos.z;
+  //cube1pos.w = 1;
 
-  XMMATRIX rotmat = XMLoadFloat4x4(&cube1rotmat) * rotXmat * rotYmat * rotZmat;
-  XMStoreFloat4x4(&cube1rotmat, rotmat);
-
-  XMMATRIX transmat = XMMatrixTranslationFromVector(XMLoadFloat4(&cube1pos));
-  XMMATRIX worldmat = rotmat * transmat;
-  XMStoreFloat4x4(&cube1worldmat, worldmat);
-  // rotate cube 1 ---
+  mat4 rotmat = DiagonalMat(1.0f);
+  mat4 transmat = TranslateMat(gameState->entities[0].pos);
+  mat4 worldmat = MulMat(rotmat, transmat);
 
   // build mvp matrix for cube 1 and send to gpu ---
-  XMMATRIX mvp = XMLoadFloat4x4(&cube1worldmat) * vp;
-  XMStoreFloat4x4(&cbPerObject.mvp, mvp);
+  mat4 mvp = MulMat(worldmat, vp);
+  cbPerObject.mvp = mvp;
   memcpy(cbvGPUAddess[renderer.frameIndex], &cbPerObject, sizeof(cbPerObject));
-  // build mvp matrix for cube 1 and send to gpu ---
 
   // ------------ CUBE 2 -------------------
   // rotate, translate, and scale cube 2 ---
-  rotXmat = XMMatrixRotationX(0.00003f);
-  rotYmat = XMMatrixRotationY(0.00002f);
-  rotZmat = XMMatrixRotationZ(0.00001f);
+  //cube2offset.x = gameState->entities[1].pos.x;
+  //cube2offset.y = gameState->entities[1].pos.y;
+  //cube2offset.z = gameState->entities[1].pos.z;
+  //cube2offset.w = 1;
 
-  rotmat = rotZmat * (XMLoadFloat4x4(&cube2rotmat) * (rotXmat * rotYmat));
-  XMStoreFloat4x4(&cube2rotmat, rotmat);
+  mat4 t2mat = TranslateMat(gameState->entities[1].pos);
+  mat4 smat = ScaleMat({ 0.5f, 0.5f, 0.5f });
 
-  XMMATRIX transoffsetmat = XMMatrixTranslationFromVector(XMLoadFloat4(&cube2offset));
-  XMMATRIX scalemat = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-
-  worldmat = scalemat * transoffsetmat * rotmat * transmat;
-  XMStoreFloat4x4(&cube2worldmat, worldmat);
-  // rotate, translate, and scale cube 2 ---
+  worldmat = MulMat(rotmat, transmat);
+  worldmat = MulMat(t2mat, worldmat);
+  worldmat = MulMat(smat, worldmat);
 
   // build mvp matrix for cube 2 and send to gpu ---
-  mvp = XMLoadFloat4x4(&cube2worldmat) * vp;
-  XMStoreFloat4x4(&cbPerObject.mvp, mvp);
+  mvp = MulMat(worldmat, vp);
+  cbPerObject.mvp = mvp;
   memcpy(cbvGPUAddess[renderer.frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
-  // build mvp matrix for cube 2 and send to gpu ---
 }
 
 #pragma endregion

@@ -22,15 +22,23 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 /* --------------- SOUND --------------- */
 
-internal void GameUpdateAndPrepareRenderData(game_Memory *gameMemory, game_Input *Input, game_SoundBuffer *soundBuffer)
+internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input* Input, game_SoundBuffer* soundBuffer)
 {
-  game_State* gameState = (game_State *)gameMemory->data;
+  game_State* gameState = (game_State*)gameMemory->data;
   if (!gameMemory->isInitialized)
   {
     gameState->toneHertz = 256;
     gameMemory->isInitialized = true;
+    gameState->entities[0] = { {0, 0, 0}, {0, 0, 0} };
+    gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0} };
   }
-  
+
+  gameState->entities[1].pos.x += gameState->entities[1].vel.x;
+  if ((gameState->entities[1].pos.x < -1) || (gameState->entities[1].pos.x > 1))
+  {
+    gameState->entities[1].vel.x *= -1;
+  }
+
   // todo: allow sample offsets here for more robust platform options
   GameOutputSound(soundBuffer, gameState->toneHertz);
 }
