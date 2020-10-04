@@ -678,17 +678,15 @@ void InitD3D(HWND window)
 
 
   // build proj and view matrix
-  mat4 tmpmat = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
-  projmat = tmpmat;
+  projmat = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
 
   // set starting camera state
-  cameraPos = Vec3(0.0f, 2.0f, -4.0f);
+  cameraPos = Vec3(0.0f, 5.0f, -5.0f);
   cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
   cameraUp = Vec3(0.0f, 1.0f, 0.0f);
 
   // view matrix
-  tmpmat = LookAtMat(cameraPos, cameraTarget, cameraUp);
-  viewmat = tmpmat;
+  viewmat = LookAtMat(cameraPos, cameraTarget, cameraUp);
 
   OutputDebugStringA("Successfully Initialized D3D\n");
 }
@@ -809,44 +807,35 @@ void Update(HWND window, game_Memory* gameMemory)
   
   mat4 proj = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
   projmat = proj;
-
+  
+  game_State* gameState = (game_State*)gameMemory->data;
   // load global view matrix to local var
   mat4 view = viewmat;
-  mat4 vp = MulMat(view, proj);
+  mat4 vp = MulMat(proj, view);
   // build vp matrix ---
 
   // ------------ CUBE 1 --------------
-  game_State* gameState = (game_State*)gameMemory->data;
-  //cube1pos.x = gameState->entities[0].pos.x;
-  //cube1pos.y = gameState->entities[0].pos.y;
-  //cube1pos.z = gameState->entities[0].pos.z;
-  //cube1pos.w = 1;
 
-  mat4 rotmat = DiagonalMat(1.0f);
-  mat4 transmat = TranslateMat(gameState->entities[0].pos);
-  mat4 worldmat = MulMat(rotmat, transmat);
-
+  mat4 worldmat = TranslateMat(gameState->entities[0].pos);
   // build mvp matrix for cube 1 and send to gpu ---
-  mat4 mvp = MulMat(worldmat, vp);
+  mat4 mvp = MulMat(vp, worldmat);
+
   cbPerObject.mvp = mvp;
   memcpy(cbvGPUAddess[renderer.frameIndex], &cbPerObject, sizeof(cbPerObject));
 
   // ------------ CUBE 2 -------------------
   // rotate, translate, and scale cube 2 ---
-  //cube2offset.x = gameState->entities[1].pos.x;
-  //cube2offset.y = gameState->entities[1].pos.y;
-  //cube2offset.z = gameState->entities[1].pos.z;
-  //cube2offset.w = 1;
 
   mat4 t2mat = TranslateMat(gameState->entities[1].pos);
+  mat4 rotmat = RotateMat(45.0f, Vec3(0, 1, 0));
   mat4 smat = ScaleMat({ 0.5f, 0.5f, 0.5f });
 
-  worldmat = MulMat(rotmat, transmat);
+  worldmat = MulMat(rotmat, smat);
   worldmat = MulMat(t2mat, worldmat);
-  worldmat = MulMat(smat, worldmat);
+  //worldmat = t2mat;
 
   // build mvp matrix for cube 2 and send to gpu ---
-  mvp = MulMat(worldmat, vp);
+  mvp = MulMat(vp, worldmat);
   cbPerObject.mvp = mvp;
   memcpy(cbvGPUAddess[renderer.frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
 }

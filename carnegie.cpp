@@ -29,8 +29,8 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
   {
     gameState->toneHertz = 256;
     gameMemory->isInitialized = true;
-    gameState->entities[0] = { {0, 0, 0}, {0, 0, 0} };
-    gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0} };
+    gameState->entities[0] = { {0, 1, -1}, {0, 0, 0} };
+    gameState->entities[1] = { {1, 0, 1}, {-0.001f, 0, 0} };
   }
 
   gameState->entities[1].pos.x += gameState->entities[1].vel.x;

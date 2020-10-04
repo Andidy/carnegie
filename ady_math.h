@@ -116,7 +116,7 @@ inline vec3 Cross(vec3 v1, vec3 v2)
 inline f32 Distance(vec3 v1, vec3 v2)
 {
   vec3 dist = SubVec(v2, v1);
-  return Dot(dist, dist);
+  return sqrtf(Dot(dist, dist));
 }
 
 // TODO: Replace sqrtf with custom implementation?
@@ -139,34 +139,40 @@ typedef union mat4
 {
   struct 
   {
-    f32 m0, m4, m8, m12;
-    f32 m1, m5, m9, m13;
-    f32 m2, m6, m10, m14;
-    f32 m3, m7, m11, m15;
+    f32 m0, m1, m2, m3;
+    f32 m4, m5, m6, m7;
+    f32 m8, m9, m10, m11;
+    f32 m12, m13, m14, m15;
   };
   
   f32 data[4][4];
-  //f32 *ptr; //what is this even?
+  
+  // reminder of the layout
+  //
+  // [0][0] [0][1] [0][2] [0][3]
+  // [1][0] [1][1] [1][2] [1][3]
+  // [2][0] [2][1] [2][2] [2][3]
+  // [3][0] [3][1] [3][2] [3][3]
+  //
+
 } mat4;
 
 inline mat4 MulMat(mat4 m1, mat4 m2)
 {
-  mat4 result = {0};
-  
-  for(int col = 0; col < 4; ++col)
+  mat4 result = { 0 };
+  for (int row = 0; row < 4; row++)
   {
-    for(int row = 0; row < 4; ++row)
+    for (int col = 0; col < 4; col++)
     {
-      float sum = 0;
-      for(int curr_mat = 0; curr_mat < 4; ++curr_mat)
+      f32 sum = 0;
+      for (int i = 0; i < 4; i++)
       {
-        sum += m1.data[curr_mat][row] * m2.data[col][curr_mat];
+        sum += m2.data[row][i] * m1.data[i][col];
       }
-      result.data[col][row] = sum;
+      result.data[row][col] = sum;
     }
   }
-  
-  return (result);
+  return result;
 }
 
 inline mat4 DiagonalMat(f32 diag)
@@ -181,15 +187,42 @@ inline mat4 DiagonalMat(f32 diag)
   return (result);
 }
 
+inline mat4 TransposeMat(mat4 m)
+{
+  mat4 result = { 0 };
+
+  result.data[0][0] = m.data[0][0];
+  result.data[0][1] = m.data[1][0];
+  result.data[0][2] = m.data[2][0];
+  result.data[0][3] = m.data[3][0];
+
+  result.data[1][0] = m.data[0][1];
+  result.data[1][1] = m.data[1][1];
+  result.data[1][2] = m.data[2][1];
+  result.data[1][3] = m.data[3][1];
+
+  result.data[2][0] = m.data[0][2];
+  result.data[2][1] = m.data[1][2];
+  result.data[2][2] = m.data[2][2];
+  result.data[2][3] = m.data[3][2];
+
+  result.data[3][0] = m.data[0][3];
+  result.data[3][1] = m.data[1][3];
+  result.data[3][2] = m.data[2][3];
+  result.data[3][3] = m.data[3][3];
+
+  return result;
+}
+
 inline mat4 TranslateMat(vec3 v)
 {
   mat4 result = DiagonalMat(1.0f);
   
-  result.data[3][0] = v.x;
-  result.data[3][1] = v.y;
-  result.data[3][2] = v.z;
-  
-  return (result);
+  result.data[0][3] = v.x;
+  result.data[1][3] = v.y;
+  result.data[2][3] = v.z;
+
+  return TransposeMat(result);
 }
 
 // Note: angle is in degrees, axis will be normalized internally
@@ -228,22 +261,6 @@ inline mat4 ScaleMat(vec3 v)
   return (result);
 }
 
-// Note: fov asks for an angle in degrees
-inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 near, f32 far)
-{
-  mat4 result = {0};
-  
-  f32 cotan = 1.0f / tanf(DegToRad(0.5f * fov));
-  
-  result.data[0][0] = cotan / aspect_ratio;
-  result.data[1][1] = cotan;
-  result.data[2][3] = 1.0f;
-  result.data[2][2] = (far) / (far - near);
-  result.data[3][2] = (-1.0f * near * far) / (far - near);
-  result.data[3][3] = 0.0f;
-  
-  return (result);
-}
 
 inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 near, f32 far)
 {
@@ -261,36 +278,55 @@ inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 near, f32
   return (result);
 }
 
+// Note: fov asks for an angle in degrees
+inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 near, f32 far)
+{
+  mat4 result = {0};
+  
+  f32 cotan = 1.0f / tanf(DegToRad(0.5f * fov));
+  
+  result.data[0][0] = cotan / aspect_ratio;
+  result.data[1][1] = cotan;
+  result.data[2][2] = (far) / (far - near);
+  result.data[3][2] = -(near * far) / (far - near);
+  result.data[2][3] = 1.0f;
+  result.data[3][3] = 0.0f;
+  
+  return (result);
+}
+
 inline mat4 LookAtMat(vec3 eye, vec3 target, vec3 up)
 {
   mat4 result;
   
-  vec3 f = NormVec(SubVec(target, eye));
-  vec3 s = NormVec(Cross(up, f));
-  vec3 u = Cross(f, s);
+  vec3 n = NormVec(SubVec(target, eye));
+  vec3 u = NormVec(Cross(up, n));
+  vec3 v = Cross(n, u);
   
-  negeye = NegVec(eye);
+  vec3 negeye = NegVec(eye);
 
-  result.data[0][0]  = s.x;
-  result.data[0][1]  = u.x;
-  result.data[0][2]  = -f.x;
-  result.data[0][3]  = 0.0f;
+  result.data[0][0] = u.x;
+  result.data[0][1] = v.x;
+  result.data[0][2] = n.x;
+  result.data[0][3] = 0.0f;
   
-  result.data[1][0]  = s.y;
-  result.data[1][1]  = u.y;
-  result.data[1][2]  = -f.y;
-  result.data[1][3]  = 0.0f;
+  result.data[1][0] = u.y;
+  result.data[1][1] = v.y;
+  result.data[1][2] = n.y;
+  result.data[1][3] = 0.0f;
   
-  result.data[2][0]  = s.z;
-  result.data[2][1]  = u.z;
-  result.data[2][2] = -f.z;
+  result.data[2][0] = u.z;
+  result.data[2][1] = v.z;
+  result.data[2][2] = n.z;
   result.data[2][3] = 0.0f;
   
-  result.data[3][0] = -Dot(s, eye);
-  result.data[3][1] = -Dot(u, eye);
-  result.data[3][2] = -Dot(f, eye);
+  result.data[3][0] = -Dot(eye, u);
+  result.data[3][1] = -Dot(eye, v);
+  result.data[3][2] = -Dot(eye, n);
   result.data[3][3] = 1.0f;
   
+  // result = TransposeMat(result);
+
   return (result);
 }
 

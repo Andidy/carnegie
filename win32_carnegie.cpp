@@ -63,7 +63,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
   QueryPerformanceFrequency(&perftimerfreqresult);
   i64 perftimerfreq = perftimerfreqresult.QuadPart;
   */
-  
+
   // Windows Window
   WNDCLASSA windowClass = {0};
   windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; 

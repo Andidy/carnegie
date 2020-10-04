@@ -18,10 +18,7 @@
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
 
-#define _XM_NO_INTRINSICS_ 1
-#include <DirectXMath.h>
 #include "d3dx12.h"
-using namespace DirectX;
 // ^^^^ DirectX12
 
 #include <math.h>
