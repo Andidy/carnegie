@@ -681,7 +681,7 @@ void InitD3D(HWND window)
   projmat = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
 
   // set starting camera state
-  cameraPos = Vec3(0.0f, 5.0f, -5.0f);
+  cameraPos = Vec3(0.0f, 2.0f, -4.0f);
   cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
   cameraUp = Vec3(0.0f, 1.0f, 0.0f);
 
