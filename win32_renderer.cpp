@@ -709,7 +709,7 @@ void UpdatePipeline()
   // set the descriptor table to the descriptor heap
   commandList->SetGraphicsRootDescriptorTable(1, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-  // draw triangle
+  // draw cubes
   commandList->RSSetViewports(1, &viewport); // set the viewports
   commandList->RSSetScissorRects(1, &scissorRect); // set the scissor rects
   commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
