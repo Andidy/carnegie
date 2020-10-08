@@ -608,8 +608,8 @@ void InitD3D(HWND window)
     hr = constantBufferUploadHeaps[i]->Map(0, &readRange, (void**)(&cbvGPUAddress[i]));
     win32_CheckSucceeded(hr);
 
-    // Because of the constant read alignment requirements, constant buffer views must be 256 bit aligned. Our buffers are smaller than 256 bits,
-    // so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
+    // Because of the constant read alignment requirements, constant buffer views must be 256 byte aligned. Our buffers are smaller than 256 byte,
+    // so we need to add spacing between the two buffers, so that the second buffer starts at 256 bytes from the beginning of the resource heap.
 
     // cube 1
     memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject));
