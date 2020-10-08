@@ -64,6 +64,9 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
   i64 perftimerfreq = perftimerfreqresult.QuadPart;
   */
 
+  window_width = 1200;
+  window_height = 900;
+
   // Windows Window
   WNDCLASSA windowClass = {0};
   windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; 
@@ -80,7 +83,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       "Project Carnegie",
       WS_OVERLAPPEDWINDOW | WS_VISIBLE,
       CW_USEDEFAULT, CW_USEDEFAULT,
-      global_windowWidth, global_windowHeight,
+      window_width, window_height,
       0, 0, instance, 0
     );
 
@@ -182,6 +185,11 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         soundBuffer.sampleCount = bytesToWrite / soundstruct.bytesPerSample;
         soundBuffer.samples = samples;
 
+        win32_WindowDimension dim = win32_GetWindowDimension(window);
+        window_width = dim.width;
+        window_height = dim.height;
+        window_aspectRatio = (f32)window_width / (f32)window_height;
+        
         GameUpdateAndPrepareRenderData(&gameMemory, newInput, &soundBuffer);
 
         // Direct Sound Test Continued

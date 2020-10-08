@@ -22,10 +22,6 @@ internal win32_WindowDimension win32_GetWindowDimension(HWND window)
 
 #pragma region D3D12
 
-global f32 aspectRatio = 1200 / 900;
-global u32 global_windowWidth = 1200;
-global u32 global_windowHeight = 900;
-
 struct Vertex
 {
   f32 x, y, z;
@@ -93,24 +89,7 @@ ID3D12DescriptorHeap* dsDescHeap;
 
 ConstantBufferPerObject cbPerObject;
 ID3D12Resource* constantBufferUploadHeaps[frameCount];
-u8* cbvGPUAddess[frameCount];
-
-// camera ---
-mat4 projmat;
-mat4 viewmat;
-
-vec3 cameraPos;
-vec3 cameraTarget;
-vec3 cameraUp;
-// camera ---
-
-// cube 1 ---
-//XMFLOAT4 cube1pos;
-// cube 1 ---
-
-// cube 2 ---
-//XMFLOAT4 cube2offset;
-// cube 2 ---
+u8* cbvGPUAddress[frameCount];
 
 i32 numCubeIndices;
 
@@ -193,8 +172,8 @@ void InitD3D(HWND window)
 
   /* Create the swapchain */
   DXGI_SWAP_CHAIN_DESC1 swapchainDesc = { 0 };
-  swapchainDesc.Width = global_windowWidth;
-  swapchainDesc.Height = global_windowHeight;
+  swapchainDesc.Width = window_width;
+  swapchainDesc.Height = window_height;
   swapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
   swapchainDesc.BufferCount = 3;
   swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -585,7 +564,7 @@ void InitD3D(HWND window)
   hr = device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
     D3D12_HEAP_FLAG_NONE,
-    &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, global_windowWidth, global_windowHeight, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+    &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, window_width, window_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
     D3D12_RESOURCE_STATE_DEPTH_WRITE,
     &depthOptimizedClearValue,
     IID_PPV_ARGS(&depthStencilBuffer)
@@ -626,16 +605,17 @@ void InitD3D(HWND window)
     ZeroMemory(&cbPerObject, sizeof(cbPerObject));
 
     CD3DX12_RANGE readRange(0, 0);
-    hr = constantBufferUploadHeaps[i]->Map(0, &readRange, (void**)(&cbvGPUAddess[i]));
+    hr = constantBufferUploadHeaps[i]->Map(0, &readRange, (void**)(&cbvGPUAddress[i]));
     win32_CheckSucceeded(hr);
 
     // Because of the constant read alignment requirements, constant buffer views must be 256 bit aligned. Our buffers are smaller than 256 bits,
     // so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
 
     // cube 1
-    memcpy(cbvGPUAddess[i], &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject));
     // cube 2
-    memcpy(cbvGPUAddess[i] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i] + 2 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   }
 
   InitializeTextureFromFileName(L"cat.png", &textureBuffer, &textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
@@ -665,28 +645,16 @@ void InitD3D(HWND window)
   // Fill out the Viewport
   viewport.TopLeftX = 0;
   viewport.TopLeftY = 0;
-  viewport.Width = (f32)global_windowWidth;
-  viewport.Height = (f32)global_windowHeight;
+  viewport.Width = (f32)window_width;
+  viewport.Height = (f32)window_height;
   viewport.MinDepth = 0.0f;
   viewport.MaxDepth = 1.0f;
 
   // Fill out a scissor rect
   scissorRect.left = 0;
   scissorRect.top = 0;
-  scissorRect.right = global_windowWidth;
-  scissorRect.bottom = global_windowHeight;
-
-
-  // build proj and view matrix
-  projmat = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
-
-  // set starting camera state
-  cameraPos = Vec3(0.0f, 2.0f, -4.0f);
-  cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
-  cameraUp = Vec3(0.0f, 1.0f, 0.0f);
-
-  // view matrix
-  viewmat = LookAtMat(cameraPos, cameraTarget, cameraUp);
+  scissorRect.right = window_width;
+  scissorRect.bottom = window_height;
 
   OutputDebugStringA("Successfully Initialized D3D\n");
 }
@@ -756,6 +724,10 @@ void UpdatePipeline()
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
 
+  // third cube
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 2 * constantBufferPerObjectAlignedSize);
+  commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
+
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
   // warning if present is called on the render target when it's not in the present state
   resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -796,48 +768,46 @@ void Render()
 
 void Update(HWND window, game_Memory* gameMemory)
 {
+  game_State* gameState = (game_State*)gameMemory->data;
+  Camera* camera = &(gameState->camera);
+  
   // build vp matrix ---
   // this can be used for all objects in the world
+  mat4 vp = MulMat(camera->proj, camera->view);
 
-  // (handles window resize)
-  win32_WindowDimension dim = win32_GetWindowDimension(window);
-  global_windowWidth = dim.width;
-  global_windowHeight = dim.height;
-  aspectRatio = (f32)global_windowWidth / (f32)global_windowHeight;
-  
-  mat4 proj = PerspectiveMat(45.0f, aspectRatio, 0.1f, 1000.0f);
-  projmat = proj;
-  
-  game_State* gameState = (game_State*)gameMemory->data;
-  // load global view matrix to local var
-  mat4 view = viewmat;
-  mat4 vp = MulMat(proj, view);
-  // build vp matrix ---
-
-  // ------------ CUBE 1 --------------
-
+  // build mvp matrix for cube 1 ---
   mat4 worldmat = TranslateMat(gameState->entities[0].pos);
-  // build mvp matrix for cube 1 and send to gpu ---
   mat4 mvp = MulMat(vp, worldmat);
 
+  // send cube 1 mvp to gpu
   cbPerObject.mvp = mvp;
-  memcpy(cbvGPUAddess[renderer.frameIndex], &cbPerObject, sizeof(cbPerObject));
+  memcpy(cbvGPUAddress[renderer.frameIndex], &cbPerObject, sizeof(cbPerObject));
 
-  // ------------ CUBE 2 -------------------
   // rotate, translate, and scale cube 2 ---
-
   mat4 t2mat = TranslateMat(gameState->entities[1].pos);
   mat4 rotmat = RotateMat(45.0f, Vec3(0, 1, 0));
   mat4 smat = ScaleMat({ 0.5f, 0.5f, 0.5f });
 
   worldmat = MulMat(rotmat, smat);
   worldmat = MulMat(t2mat, worldmat);
-  //worldmat = t2mat;
-
-  // build mvp matrix for cube 2 and send to gpu ---
   mvp = MulMat(vp, worldmat);
+
+  // send cube 2 mvp to gpu
   cbPerObject.mvp = mvp;
-  memcpy(cbvGPUAddess[renderer.frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+  memcpy(cbvGPUAddress[renderer.frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+
+  // rotate, translate, and scale cube 3 ---
+  mat4 t3mat = TranslateMat(Vec3(1, 1, 1));
+  mat4 rot3mat = RotateMat(75.0f, Vec3(0, 0, 1));
+  mat4 s3mat = ScaleMat({ 0.25f, 0.25f, 0.25f });
+
+  worldmat = MulMat(rot3mat, s3mat);
+  worldmat = MulMat(t3mat, worldmat);
+  mvp = MulMat(vp, worldmat);
+
+  // send cube 3 mvp to gpu
+  cbPerObject.mvp = mvp;
+  memcpy(cbvGPUAddress[renderer.frameIndex] + 2 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
 }
 
 #pragma endregion

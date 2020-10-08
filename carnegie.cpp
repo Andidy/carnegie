@@ -27,8 +27,22 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
   game_State* gameState = (game_State*)gameMemory->data;
   if (!gameMemory->isInitialized)
   {
-    gameState->toneHertz = 256;
     gameMemory->isInitialized = true;
+    gameState->toneHertz = 256;
+    
+    // build proj and view matrix
+    mat4 projmat = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
+
+    // set starting camera state
+    vec3 cameraPos = Vec3(0.0f, 2.0f, -4.0f);
+    vec3 cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
+    vec3 cameraUp = Vec3(0.0f, 1.0f, 0.0f);
+
+    // view matrix
+    mat4 viewmat = LookAtMat(cameraPos, cameraTarget, cameraUp);
+
+    gameState->camera = {cameraPos, cameraTarget, cameraUp, projmat, viewmat};
+    
     gameState->entities[0] = { {0, 0, 0}, {0, 0, 0} };
     gameState->entities[1] = { {1, 0, 1}, {-0.0001f, 0, 0} };
   }
@@ -38,6 +52,9 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
   {
     gameState->entities[1].vel.x *= -1;
   }
+
+  gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
+  gameState->camera.view = LookAtMat(gameState->camera.pos, gameState->camera.target, gameState->camera.up);
 
   // todo: allow sample offsets here for more robust platform options
   GameOutputSound(soundBuffer, gameState->toneHertz);

@@ -1,6 +1,11 @@
 #pragma once
 
-//struct vec3
-//{
-//  f32 x, y, z;
-//};
+struct Camera
+{
+  vec3 pos;
+  vec3 target;
+  vec3 up;
+
+  mat4 proj;
+  mat4 view;
+};

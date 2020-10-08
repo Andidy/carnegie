@@ -17,6 +17,12 @@
 #define Assert(val) if(!(val)) {*(int *)0 = 0;}
 
 // PLATFORM LAYER -> GAME //
+/*
+  These variables and functions are platform specific but their results are
+  needed / used by the Game layer, and so are defined here, but are 
+  implemented inside the platform layer. For example, the Game is saved and so
+  needs to write the save file to disk.
+*/
 struct dev_ReadFileResult
 {
   u64 size;
@@ -28,8 +34,16 @@ internal void dev_FreeFile(void *memory);
 internal b32 dev_WriteFile(char *filename, u32 memorySize, void *memory);
 
 // GAME -> PLATFORM LAYER //
-
+/*
+  These are the Game data types and functions which the platform layer may
+  need to access for various reasons. For example, the game_KeyboardState
+  needs to have its key states set by the platform layer.
+*/
 // Input, Render Buffer, Timing, Sound Buffer
+
+u32 window_width;
+u32 window_height;
+f32 window_aspectRatio;
 
 struct game_SoundBuffer
 {
@@ -157,6 +171,7 @@ struct game_State
   i32 yoff;
   i32 toneHertz;
 
+  Camera camera;
   Entity entities[2];
 };
 
