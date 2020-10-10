@@ -165,6 +165,7 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* game_Memory, game_Inpu
 
 /* Game Only */
 
+const i32 NUM_ENTITIES = 3;
 struct game_State
 {
   i32 xoff;
@@ -172,7 +173,7 @@ struct game_State
   i32 toneHertz;
 
   Camera camera;
-  Entity entities[2];
+  Entity entities[NUM_ENTITIES];
 };
 
 #endif
