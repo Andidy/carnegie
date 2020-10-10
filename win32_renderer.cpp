@@ -80,18 +80,24 @@ struct Renderer
 Renderer renderer;
 
 // app resources
-ID3D12Resource* vertexBuffer;
-D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-ID3D12Resource* indexBuffer;
-D3D12_INDEX_BUFFER_VIEW indexBufferView;
+struct Model
+{
+  ID3D12Resource* vertexBuffer;
+  D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+  ID3D12Resource* indexBuffer;
+  D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+  i32 numIndices;
+};
+Model cube;
+Model quad;
+
 ID3D12Resource* depthStencilBuffer;
 ID3D12DescriptorHeap* dsDescHeap;
 
 ConstantBufferPerObject cbPerObject;
 ID3D12Resource* constantBufferUploadHeaps[frameCount];
 u8* cbvGPUAddress[frameCount];
-
-i32 numCubeIndices;
 
 ID3D12Resource* textureBuffer;
 ID3D12DescriptorHeap* mainDescriptorHeap;
@@ -396,6 +402,7 @@ void InitD3D(HWND window)
   hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&renderer.pipelineStateObject));
   win32_CheckSucceeded(hr);
 
+  // here
   // Create vertex buffer
   Vertex vList[] = {
     // front face
@@ -446,12 +453,12 @@ void InitD3D(HWND window)
     &CD3DX12_RESOURCE_DESC::Buffer(vBufferSize),
     D3D12_RESOURCE_STATE_COPY_DEST,
     0,
-    IID_PPV_ARGS(&vertexBuffer)
+    IID_PPV_ARGS(&(cube.vertexBuffer))
   );
   win32_CheckSucceeded(hr);
 
   // give the heap a name for debugging
-  vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
+  cube.vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
 
   // create upload heap
   ID3D12Resource* vBufferUploadHeap;
@@ -473,11 +480,11 @@ void InitD3D(HWND window)
 
   // we now create a command with a command list to copy the data from
   // the upload heap to the default heap
-  UpdateSubresources(commandList, vertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
+  UpdateSubresources(commandList, cube.vertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
 
   // transition the vertex buffer data from copy destination state to the vertex buffer state
   commandList->ResourceBarrier(
-    1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+    1, &CD3DX12_RESOURCE_BARRIER::Transition(cube.vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
   );
 
   // create index buffer
@@ -508,7 +515,7 @@ void InitD3D(HWND window)
   };
   i32 iBufferSize = sizeof(iList);
 
-  numCubeIndices = sizeof(iList) / sizeof(DWORD);
+  cube.numIndices = sizeof(iList) / sizeof(DWORD);
 
   // create the default heap to hold index buffer
   hr = device->CreateCommittedResource(
@@ -516,10 +523,10 @@ void InitD3D(HWND window)
     D3D12_HEAP_FLAG_NONE,
     &CD3DX12_RESOURCE_DESC::Buffer(iBufferSize),
     D3D12_RESOURCE_STATE_COPY_DEST,
-    0, IID_PPV_ARGS(&indexBuffer)
+    0, IID_PPV_ARGS(&(cube.indexBuffer))
   );
   win32_CheckSucceeded(hr);
-  indexBuffer->SetName(L"IndexBufferResourceName");
+  cube.indexBuffer->SetName(L"IndexBufferResourceName");
 
   // create upload heap to upload index buffer
   ID3D12Resource* iBufferUploadHeap;
@@ -539,9 +546,110 @@ void InitD3D(HWND window)
   indexData.RowPitch = iBufferSize;
   indexData.SlicePitch = iBufferSize;
 
-  UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
+  UpdateSubresources(commandList, cube.indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
 
-  commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+  commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(cube.indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+
+  /////////////////////////////////////////////////////////////////
+  // Plane vertex and index buffer stuff
+  // Create vertex buffer
+  Vertex planevList[] = {
+    // front face
+    { -0.5f,  0.5f, 0,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f },
+    {  0.5f, -0.5f, 0,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
+    { -0.5f, -0.5f, 0,  0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f },
+    {  0.5f,  0.5f, 0,  0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f },
+  };
+  i32 planevBufferSize = sizeof(planevList);
+
+  // create default heap
+  // default heap is memory on the GPU. Only the GPU has access to this memory
+  // To get data into this heap, we will have to upload the data using
+  // an upload heap
+  hr = device->CreateCommittedResource(
+    &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+    D3D12_HEAP_FLAG_NONE,
+    &CD3DX12_RESOURCE_DESC::Buffer(planevBufferSize),
+    D3D12_RESOURCE_STATE_COPY_DEST,
+    0,
+    IID_PPV_ARGS(&(quad.vertexBuffer))
+  );
+  win32_CheckSucceeded(hr);
+
+  // give the heap a name for debugging
+  quad.vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
+
+  // create upload heap
+  ID3D12Resource* planevBufferUploadHeap;
+  hr = device->CreateCommittedResource(
+    &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+    D3D12_HEAP_FLAG_NONE,
+    &CD3DX12_RESOURCE_DESC::Buffer(vBufferSize),
+    D3D12_RESOURCE_STATE_GENERIC_READ,
+    0, IID_PPV_ARGS(&planevBufferUploadHeap)
+  );
+  win32_CheckSucceeded(hr);
+  planevBufferUploadHeap->SetName(L"VertexBufferUploadResourceHeap");
+
+  // store buffer in upload heap
+  D3D12_SUBRESOURCE_DATA planevertexData = { 0 };
+  planevertexData.pData = (BYTE*)(planevList);
+  planevertexData.RowPitch = planevBufferSize;
+  planevertexData.SlicePitch = planevBufferSize;
+
+  // we now create a command with a command list to copy the data from
+  // the upload heap to the default heap
+  UpdateSubresources(commandList, quad.vertexBuffer, planevBufferUploadHeap, 0, 0, 1, &planevertexData);
+
+  // transition the vertex buffer data from copy destination state to the vertex buffer state
+  commandList->ResourceBarrier(
+    1, &CD3DX12_RESOURCE_BARRIER::Transition(quad.vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+  );
+
+  // create index buffer
+  DWORD planeiList[] = {
+    // front face
+    0, 1, 2, // first triangle
+    0, 3, 1, // second triangle
+  };
+  i32 planeiBufferSize = sizeof(planeiList);
+
+  quad.numIndices = sizeof(planeiList) / sizeof(DWORD);
+
+  // create the default heap to hold index buffer
+  hr = device->CreateCommittedResource(
+    &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+    D3D12_HEAP_FLAG_NONE,
+    &CD3DX12_RESOURCE_DESC::Buffer(planeiBufferSize),
+    D3D12_RESOURCE_STATE_COPY_DEST,
+    0, IID_PPV_ARGS(&quad.indexBuffer)
+  );
+  win32_CheckSucceeded(hr);
+  quad.indexBuffer->SetName(L"IndexBufferResourceName");
+
+  // create upload heap to upload index buffer
+  ID3D12Resource* planeiBufferUploadHeap;
+  hr = device->CreateCommittedResource(
+    &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+    D3D12_HEAP_FLAG_NONE,
+    &CD3DX12_RESOURCE_DESC::Buffer(planeiBufferSize),
+    D3D12_RESOURCE_STATE_GENERIC_READ,
+    0, IID_PPV_ARGS(&planeiBufferUploadHeap)
+  );
+  win32_CheckSucceeded(hr);
+  planeiBufferUploadHeap->SetName(L"IndexBufferUploadResourceHeap");
+
+  // store index buffer in upload heap
+  D3D12_SUBRESOURCE_DATA planeindexData = { 0 };
+  planeindexData.pData = (BYTE*)(planeiList);
+  planeindexData.RowPitch = planeiBufferSize;
+  planeindexData.SlicePitch = planeiBufferSize;
+
+  UpdateSubresources(commandList, quad.indexBuffer, planeiBufferUploadHeap, 0, 0, 1, &planeindexData);
+
+  commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(quad.indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+
+  /////////////////////////////////////////////////////////////////
 
   // Depth stencil heap
   D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = { 0 };
@@ -634,13 +742,23 @@ void InitD3D(HWND window)
   // free(imageData);
 
   // create a vertex buffer view for the triangle
-  vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-  vertexBufferView.StrideInBytes = sizeof(Vertex);
-  vertexBufferView.SizeInBytes = vBufferSize;
+  cube.vertexBufferView.BufferLocation = cube.vertexBuffer->GetGPUVirtualAddress();
+  cube.vertexBufferView.StrideInBytes = sizeof(Vertex);
+  cube.vertexBufferView.SizeInBytes = vBufferSize;
 
-  indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-  indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-  indexBufferView.SizeInBytes = iBufferSize;
+  cube.indexBufferView.BufferLocation = cube.indexBuffer->GetGPUVirtualAddress();
+  cube.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+  cube.indexBufferView.SizeInBytes = iBufferSize;
+
+  // here
+  // create a vertex buffer view for the triangle
+  quad.vertexBufferView.BufferLocation = quad.vertexBuffer->GetGPUVirtualAddress();
+  quad.vertexBufferView.StrideInBytes = sizeof(Vertex);
+  quad.vertexBufferView.SizeInBytes = planevBufferSize;
+
+  quad.indexBufferView.BufferLocation = quad.indexBuffer->GetGPUVirtualAddress();
+  quad.indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+  quad.indexBufferView.SizeInBytes = planeiBufferSize;
 
   // Fill out the Viewport
   viewport.TopLeftX = 0;
@@ -713,20 +831,23 @@ void UpdatePipeline()
   commandList->RSSetViewports(1, &viewport); // set the viewports
   commandList->RSSetScissorRects(1, &scissorRect); // set the scissor rects
   commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
-  commandList->IASetVertexBuffers(0, 1, &vertexBufferView); // set the vertex buffer (using the vertex buffer view)
-  commandList->IASetIndexBuffer(&indexBufferView);
+  commandList->IASetVertexBuffers(0, 1, &cube.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
+  commandList->IASetIndexBuffer(&cube.indexBufferView);
 
   // first cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress());
-  commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
+  commandList->DrawIndexedInstanced(cube.numIndices, 1, 0, 0, 0);
 
   // second cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
-  commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
+  commandList->DrawIndexedInstanced(cube.numIndices, 1, 0, 0, 0);
+
+  commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
+  commandList->IASetIndexBuffer(&quad.indexBufferView);
 
   // third cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 2 * constantBufferPerObjectAlignedSize);
-  commandList->DrawIndexedInstanced(numCubeIndices, 1, 0, 0, 0);
+  commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
   // warning if present is called on the render target when it's not in the present state
