@@ -845,7 +845,7 @@ void UpdatePipeline()
   commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
   commandList->IASetIndexBuffer(&quad.indexBufferView);
 
-  // third cube
+  // first quad
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 2 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
