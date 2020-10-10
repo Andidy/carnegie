@@ -775,39 +775,20 @@ void Update(HWND window, game_Memory* gameMemory)
   // this can be used for all objects in the world
   mat4 vp = MulMat(camera->proj, camera->view);
 
-  // build mvp matrix for cube 1 ---
-  mat4 worldmat = TranslateMat(gameState->entities[0].pos);
-  mat4 mvp = MulMat(vp, worldmat);
+  for (int i = 0; i < NUM_ENTITIES; i++)
+  {
+    mat4 trans = TranslateMat(gameState->entities[i].pos);
+    // mat4 rot = RotateMat();
+    mat4 scale = ScaleMat(gameState->entities[i].scale);
 
-  // send cube 1 mvp to gpu
-  cbPerObject.mvp = mvp;
-  memcpy(cbvGPUAddress[renderer.frameIndex], &cbPerObject, sizeof(cbPerObject));
+    mat4 model = scale;
+    // model = MulMat(rot, model);
+    model = MulMat(trans, model);
+    mat4 mvp = MulMat(vp, model);
 
-  // rotate, translate, and scale cube 2 ---
-  mat4 t2mat = TranslateMat(gameState->entities[1].pos);
-  mat4 rotmat = RotateMat(45.0f, Vec3(0, 1, 0));
-  mat4 smat = ScaleMat({ 0.5f, 0.5f, 0.5f });
-
-  worldmat = MulMat(rotmat, smat);
-  worldmat = MulMat(t2mat, worldmat);
-  mvp = MulMat(vp, worldmat);
-
-  // send cube 2 mvp to gpu
-  cbPerObject.mvp = mvp;
-  memcpy(cbvGPUAddress[renderer.frameIndex] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
-
-  // rotate, translate, and scale cube 3 ---
-  mat4 t3mat = TranslateMat(Vec3(1, 1, 1));
-  mat4 rot3mat = RotateMat(75.0f, Vec3(0, 0, 1));
-  mat4 s3mat = ScaleMat({ 0.25f, 0.25f, 0.25f });
-
-  worldmat = MulMat(rot3mat, s3mat);
-  worldmat = MulMat(t3mat, worldmat);
-  mvp = MulMat(vp, worldmat);
-
-  // send cube 3 mvp to gpu
-  cbPerObject.mvp = mvp;
-  memcpy(cbvGPUAddress[renderer.frameIndex] + 2 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    cbPerObject.mvp = mvp;
+    memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+  }
 }
 
 #pragma endregion
