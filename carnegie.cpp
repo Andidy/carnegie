@@ -43,14 +43,27 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
 
     gameState->camera = {cameraPos, cameraTarget, cameraUp, projmat, viewmat};
     
-    gameState->entities[0] = { {0, 0, 0}, {0, 0, 0} };
-    gameState->entities[1] = { {1, 0, 1}, {-0.0001f, 0, 0} };
+    gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1} };
+    gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5} };
+    gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25} };
+  }
+
+  gameState->entities[0].pos.y += gameState->entities[0].vel.y;
+  if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))
+  {
+    gameState->entities[0].vel.y *= -1;
   }
 
   gameState->entities[1].pos.x += gameState->entities[1].vel.x;
   if ((gameState->entities[1].pos.x < -1) || (gameState->entities[1].pos.x > 1))
   {
     gameState->entities[1].vel.x *= -1;
+  }
+
+  gameState->entities[2].pos.z += gameState->entities[2].vel.z;
+  if ((gameState->entities[2].pos.z < -1) || (gameState->entities[2].pos.z > 1))
+  {
+    gameState->entities[2].vel.z *= -1;
   }
 
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
