@@ -84,6 +84,7 @@ internal void win32_UpdateInput(game_Input* gameInput)
             case 'W':
             {
               win32_ProcessKeyboardMessage(&gameInput->keyboard.w, isDown);
+              OutputDebugStringA("Pressed W Key\n");
             } break;
             case 'A':
             {
