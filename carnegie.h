@@ -58,6 +58,21 @@ struct game_ButtonState
   b32 endedDown;
 };
 
+b32 keyPressed(game_ButtonState button)
+{
+  return (button.endedDown) && (button.transitionCount > 0);
+}
+
+b32 keyReleased(game_ButtonState button)
+{
+  return !(button.endedDown) && (button.transitionCount > 0);
+}
+
+b32 keyDown(game_ButtonState button)
+{
+  return (button.endedDown) && (button.transitionCount == 0);
+}
+
 struct game_ControllerState
 {
   b32 isAnalog;

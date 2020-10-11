@@ -84,7 +84,21 @@ internal void win32_UpdateInput(game_Input* gameInput)
             case 'W':
             {
               win32_ProcessKeyboardMessage(&gameInput->keyboard.w, isDown);
-              OutputDebugStringA("Pressed W Key\n");
+              
+              OutputDebugStringA("W:-----------------------\n");
+              if (gameInput->keyboard.w.endedDown)
+              {
+                OutputDebugStringA("EndedDown\n");
+              }
+              if (gameInput->keyboard.w.transitionCount > 0)
+              {
+                OutputDebugStringA("TransCount > 0\n");
+              }
+              if (gameInput->keyboard.w.endedDown && (gameInput->keyboard.w.transitionCount == 0))
+              {
+                OutputDebugStringA("Down and no trans\n");
+              }
+              OutputDebugStringA("\n");
             } break;
             case 'A':
             {
