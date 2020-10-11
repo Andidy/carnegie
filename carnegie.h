@@ -104,6 +104,7 @@ struct game_ControllerState
   };
 };
 
+const int NUM_KEYBOARD_BUTTONS = 30;
 struct game_KeyboardState
 {
   union
@@ -143,7 +144,7 @@ struct game_KeyboardState
       game_ButtonState right;
     };
 
-    game_ButtonState buttons[30];
+    game_ButtonState buttons[NUM_KEYBOARD_BUTTONS];
   };
 };
 
