@@ -141,6 +141,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         ++counter;
         
         // Input
+        /*
         MSG message;
         while(PeekMessage(&message, 0, 0, 0, PM_REMOVE))
         {
@@ -152,6 +153,12 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
           TranslateMessage(&message);
           DispatchMessage(&message);
         }
+        */
+        for (i32 i = 0; i < NUM_KEYBOARD_BUTTONS; i++)
+        {
+          newInput->keyboard.buttons[i].endedDown = oldInput->keyboard.buttons[i].endedDown;
+        }
+        win32_UpdateInput(newInput);
 
         // DirectSound Output Test
         DWORD playCursor = 0;
