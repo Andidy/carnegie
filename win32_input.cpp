@@ -81,36 +81,109 @@ internal void win32_UpdateInput(game_Input* gameInput)
         {
           switch (vkCode)
           {
-            case 'W':
-            {
-              win32_ProcessKeyboardMessage(&gameInput->keyboard.w, isDown);
-              
-              OutputDebugStringA("W:-----------------------\n");
-              if (gameInput->keyboard.w.endedDown)
-              {
-                OutputDebugStringA("EndedDown\n");
-              }
-              if (gameInput->keyboard.w.transitionCount > 0)
-              {
-                OutputDebugStringA("TransCount > 0\n");
-              }
-              if (gameInput->keyboard.w.endedDown && (gameInput->keyboard.w.transitionCount == 0))
-              {
-                OutputDebugStringA("Down and no trans\n");
-              }
-              OutputDebugStringA("\n");
-            } break;
             case 'A':
             {
               win32_ProcessKeyboardMessage(&gameInput->keyboard.a, isDown);
+            } break;
+            case 'B':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.b, isDown);
+            } break;
+            case 'C':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.c, isDown);
+            } break;
+            case 'D':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.d, isDown);
+            } break;
+            case 'E':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.e, isDown);
+            } break;
+            case 'F':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.f, isDown);
+            } break;
+            case 'G':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.g, isDown);
+            } break;
+            case 'H':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.h, isDown);
+            } break;
+            case 'I':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.i, isDown);
+            } break;
+            case 'J':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.j, isDown);
+            } break;
+            case 'K':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.k, isDown);
+            } break;
+            case 'L':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.l, isDown);
+            } break;
+            case 'M':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.m, isDown);
+            } break;
+            case 'N':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.n, isDown);
+            } break;
+            case 'O':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.o, isDown);
+            } break;
+            case 'P':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.p, isDown);
+            } break;
+            case 'Q':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.q, isDown);
+            } break;
+            case 'R':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.r, isDown);
             } break;
             case 'S':
             {
               win32_ProcessKeyboardMessage(&gameInput->keyboard.s, isDown);
             } break;
-            case 'D':
+            case 'T':
             {
-              win32_ProcessKeyboardMessage(&gameInput->keyboard.d, isDown);
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.t, isDown);
+            } break;
+            case 'U':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.u, isDown);
+            } break;
+            case 'V':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.v, isDown);
+            } break;
+            case 'W':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.w, isDown);
+            } break;
+            case 'X':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.x, isDown);
+            } break;
+            case 'Y':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.y, isDown);
+            } break;
+            case 'Z':
+            {
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.z, isDown);
             } break;
             case VK_UP:
             {
@@ -130,11 +203,11 @@ internal void win32_UpdateInput(game_Input* gameInput)
             } break;
             case VK_SPACE:
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.space, isDown);
             } break;
             case VK_ESCAPE:
             {
-
+              win32_ProcessKeyboardMessage(&gameInput->keyboard.escape, isDown);
             } break;
           }
         }
