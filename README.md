@@ -8,4 +8,4 @@ Todo:
 ---
 Extras:
 - [ ] Remove reliance on d3dx12.h helper file.
-- [ ] Remove reliance on DirectXMath.h ? (maybe this one is fine, the Load() functions are annoying though)
+- [X] Remove reliance on DirectXMath.h ? (maybe this one is fine, the Load() functions are annoying though)
