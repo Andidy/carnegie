@@ -728,7 +728,7 @@ void InitD3D(HWND window)
     memcpy(cbvGPUAddress[i] + 2 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   }
 
-  InitializeTextureFromFileName(L"cat.png", &textureBuffer, &textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  InitializeTextureFromFileName(L"../test_assets/cat.png", &textureBuffer, &textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
