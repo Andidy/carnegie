@@ -187,8 +187,6 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* game_Memory, game_Inpu
 const i32 NUM_ENTITIES = 3;
 struct game_State
 {
-  i32 xoff;
-  i32 yoff;
   i32 toneHertz;
 
   Camera camera;
