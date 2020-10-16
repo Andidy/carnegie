@@ -5,10 +5,6 @@
 #include "carnegie.cpp"
 // ^^^^ Carnegie game and engine stuff
 
-//#ifndef WIN32_LEAN_AND_MEAN
-//#define WIN32_LEAN_AND_MEAN
-//#endif
-
 #include <windows.h>
 #include <xinput.h>
 #include <dsound.h>
@@ -18,7 +14,7 @@
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
 
-#include "d3dx12.h"
+#include "libs/d3dx12.h"
 // ^^^^ DirectX12
 
 #include <math.h>
