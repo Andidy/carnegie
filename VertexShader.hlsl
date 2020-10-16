@@ -3,6 +3,7 @@ struct VS_INPUT
 	float3 pos : POSITION;
 	float4 color : COLOR;
 	float2 texcoord : TEXCOORD;
+	float3 normal : NORMAL;
 };
 
 struct VS_OUTPUT

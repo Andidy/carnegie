@@ -27,6 +27,7 @@ struct Vertex
   f32 x, y, z;
   f32 r, g, b, a;
   f32 u, v;
+  f32 xn, yn, zn;
 };
 
 struct ConstantBufferPerObject
@@ -365,7 +366,8 @@ void InitD3D(HWND window)
   D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
   };
 
   // fill out an input layout description structure
@@ -406,40 +408,40 @@ void InitD3D(HWND window)
   // Create vertex buffer
   Vertex vList[] = {
     // front face
-    { -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f },
-    {  0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    { -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f },
-    {  0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f },
+    { -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
+    {  0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    { -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    {  0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0, 0 },
 
     // right side face
-    {  0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f },
-    {  0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f },
-    {  0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    {  0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f },
+    {  0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    {  0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f, 0, 0 },
+    {  0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    {  0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
 
     // left side face
-    { -0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f },
-    { -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    { -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f },
-    { -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f },
+    { -0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
+    { -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    { -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    { -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0, 0 },
 
     // back face
-    {  0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f },
-    { -0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    {  0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f },
-    { -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f },
+    {  0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
+    { -0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    {  0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    { -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0, 0 },
 
     // top face
-    { -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f },
-    {  0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f },
-    {  0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    { -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f },
+    { -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    {  0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f, 0, 0 },
+    {  0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    { -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
 
     // bottom face
-    {  0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f },
-    { -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    {  0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f },
-    { -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f }
+    {  0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
+    { -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    {  0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    { -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0, 0 }
   };
   i32 vBufferSize = sizeof(vList);
 
@@ -555,10 +557,10 @@ void InitD3D(HWND window)
   // Create vertex buffer
   Vertex planevList[] = {
     // front face
-    { -0.5f,  0.5f, 0,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f },
-    {  0.5f, -0.5f, 0,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f },
-    { -0.5f, -0.5f, 0,  0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f },
-    {  0.5f,  0.5f, 0,  0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f },
+    { -0.5f,  0.5f, 0,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, 0, 0 },
+    {  0.5f, -0.5f, 0,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 0, 0 },
+    { -0.5f, -0.5f, 0,  0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0, 0 },
+    {  0.5f,  0.5f, 0,  0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0, 0 },
   };
   i32 planevBufferSize = sizeof(planevList);
 
