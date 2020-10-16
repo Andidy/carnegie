@@ -2,9 +2,19 @@
  
 Todo:
 - [X] Complete d3d12 tutorials
-- [ ] Finish handmade hero platform layer episodes (16-25)
 - [X] Port D3D12 rendering code onto the HMH platform layer
-- [ ] Port existing Bismarck code onto the new Platform layer / Renderer
+
+- In no particular order:
+- [ ] Entity System
+- [ ] Expand Keyboard Input
+- [ ] Mouse Input
+- [ ] Camera Movement
+- [ ] Finish OBJ loader / integrate Assimp
+- [ ] Continue Functionalizing the Renderer
+- [ ] Some sort of gameplay stuff
+- [ ] Texture and Model Structures
+- [ ] Memory Management functions
+
 ---
 Extras:
 - [ ] Remove reliance on d3dx12.h helper file.
