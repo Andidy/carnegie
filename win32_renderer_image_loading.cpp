@@ -6,7 +6,7 @@ can be replaced later
 
 */
 
-#include <d3d12.h>
+#include "win32_renderer.h"
 #include <wincodec.h>
 
 // get the dxgi format equivilent of a wic format

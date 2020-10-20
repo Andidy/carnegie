@@ -76,6 +76,7 @@ void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
 #include "win32_fileio.cpp"
 #include "win32_sound.cpp"
 
+#include "win32_renderer.h"
 #include "win32_renderer_texture.cpp"
 #include "win32_renderer.cpp"
 

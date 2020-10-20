@@ -1,11 +1,6 @@
-struct ImageData
-{
-  BYTE* data;
-  i32 size;
-  i32 bytesPerRow;
-};
+#include "win32_renderer.h"
 
-void InitializeTextureFromFileName(LPCWSTR filename, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
+void InitializeTextureFromFileName(LPCWSTR filename, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList)
 {
   ImageData imageData = { 0 };
   D3D12_RESOURCE_DESC textureDesc = { 0 };
@@ -17,7 +12,7 @@ void InitializeTextureFromFileName(LPCWSTR filename, ID3D12Resource** textureBuf
     return;
   }
 
-  hr = device->CreateCommittedResource(
+  hr = _device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
     D3D12_HEAP_FLAG_NONE,
     &textureDesc,
@@ -30,9 +25,9 @@ void InitializeTextureFromFileName(LPCWSTR filename, ID3D12Resource** textureBuf
   u64 textureUploadBufferSize;
   // this function gets the size of an upload buffer needs to be to upload a texture to the gpu.
   // each row must be 256 byte aligned except for the last row which can just be the size in bytes of the row.
-  device->GetCopyableFootprints(&textureDesc, 0, 1, 0, 0, 0, 0, &textureUploadBufferSize);
+  _device->GetCopyableFootprints(&textureDesc, 0, 1, 0, 0, 0, 0, &textureUploadBufferSize);
 
-  hr = device->CreateCommittedResource(
+  hr = _device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
     D3D12_HEAP_FLAG_NONE,
     &CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize),
@@ -51,18 +46,7 @@ void InitializeTextureFromFileName(LPCWSTR filename, ID3D12Resource** textureBuf
   // now we copy the upload buffer contents to the default heap
   UpdateSubresources(commandList, *textureBuffer, *textureBufferUploadHeap, 0, 0, 1, &textureData);
   // transition the texture default heap to a pixel shader resource
-  commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
-  // TODO: mainDescriptorHeap probably shouldn't be created here?
-  // now we can create a descriptor heap that will store our srv
-  D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 1;
-  heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-  heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-  hr = device->CreateDescriptorHeap(
-    &heapDesc, IID_PPV_ARGS(mainDescHeap)
-  );
-  win32_CheckSucceeded(hr);
+  _commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
   // now we create a shader resource view
   D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { 0 };
@@ -70,7 +54,13 @@ void InitializeTextureFromFileName(LPCWSTR filename, ID3D12Resource** textureBuf
   srvDesc.Format = textureDesc.Format;
   srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
   srvDesc.Texture2D.MipLevels = 1;
-  device->CreateShaderResourceView(*textureBuffer, &srvDesc, 
-    (*mainDescHeap)->GetCPUDescriptorHandleForHeapStart());
+  
+  
+  D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle = (*mainDescHeap)->GetCPUDescriptorHandleForHeapStart();
+  u32 offset = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+  cpuDescriptorHandle.ptr = (SIZE_T)(((INT64)cpuDescriptorHandle.ptr) + ((INT64)index) * (INT64)offset);
+
+  _device->CreateShaderResourceView(*textureBuffer, &srvDesc, 
+    cpuDescriptorHandle);
   win32_CheckSucceeded(hr);
 }

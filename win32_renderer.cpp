@@ -1,3 +1,5 @@
+#include "win32_renderer.h"
+
 ID3D12Debug* debugController;
 
 /* ------------------- RENDERING ------------------- */
@@ -21,90 +23,6 @@ internal win32_WindowDimension win32_GetWindowDimension(HWND window)
 #pragma endregion
 
 #pragma region D3D12
-
-struct Vertex
-{
-  f32 x, y, z;
-  f32 r, g, b, a;
-  f32 u, v;
-  f32 xn, yn, zn;
-};
-
-struct ConstantBufferPerObject
-{
-  mat4 mvp;
-};
-
-// Constant buffers must be 256-byte aligned which has to do with constant reads on the GPU.
-// We are only able to read at 256 byte intervals from the start of a resource heap, so we will
-// make sure that we add padding between the two constant buffers in the heap (one for cube1 and one for cube2)
-// Another way to do this would be to add a float array in the constant buffer structure for padding. In this case
-// we would need to add a float padding[50]; after the wvpMat variable. This would align our structure to 256 bytes (4 bytes per float)
-// The reason i didn't go with this way, was because there would actually be wasted cpu cycles when memcpy our constant
-// buffer data to the gpu virtual address. currently we memcpy the size of our structure, which is 16 bytes here, but if we
-// were to add the padding array, we would memcpy 64 bytes if we memcpy the size of our structure, which is 50 wasted bytes
-// being copied.
-i32 constantBufferPerObjectAlignedSize = (sizeof(ConstantBufferPerObject) + 255) & ~255;
-
-#define def_FrameCount 3
-static const UINT frameCount = def_FrameCount;
-
-// Pipeline objects
-D3D12_VIEWPORT viewport;
-D3D12_RECT scissorRect;
-
-IDXGISwapChain3* swapchain;
-ID3D12Device* device;
-
-ID3D12CommandAllocator* commandAllocator[def_FrameCount];
-ID3D12CommandQueue* commandQueue;
-ID3D12GraphicsCommandList* commandList;
-
-ID3D12Resource* renderTargets[def_FrameCount];
-ID3D12DescriptorHeap* rtvHeap;
-UINT rtvDescSize;
-
-
-struct Renderer
-{
-  // --- Input Data for GPU ---
-  // rootSig and pso should be made into arrays and expanded as neccesary
-  ID3D12RootSignature* rootSignature;
-  ID3D12PipelineState* pipelineStateObject;
-
-  // synchronization objects
-  UINT frameIndex;
-  HANDLE fenceEvent;
-  ID3D12Fence* fence[def_FrameCount];
-  u64 fenceValue[def_FrameCount];
-};
-Renderer renderer;
-
-// app resources
-struct Model
-{
-  ID3D12Resource* vertexBuffer;
-  D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-  ID3D12Resource* indexBuffer;
-  D3D12_INDEX_BUFFER_VIEW indexBufferView;
-
-  i32 numIndices;
-};
-Model cube;
-Model quad;
-
-ID3D12Resource* depthStencilBuffer;
-ID3D12DescriptorHeap* dsDescHeap;
-
-ConstantBufferPerObject cbPerObject;
-ID3D12Resource* constantBufferUploadHeaps[frameCount];
-u8* cbvGPUAddress[frameCount];
-
-ID3D12Resource* textureBuffer;
-ID3D12DescriptorHeap* mainDescriptorHeap;
-ID3D12Resource* textureBufferUploadHeap;
-
-
 
 void WaitForPreviousFrame()
 {
@@ -728,7 +646,20 @@ void InitD3D(HWND window)
     memcpy(cbvGPUAddress[i] + 2 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   }
 
-  InitializeTextureFromFileName(L"../test_assets/cat.png", &textureBuffer, &textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  // now we can create a descriptor heap that will store our srv
+  D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
+  heapDesc.NumDescriptors = 2;
+  heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+  heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+  hr = device->CreateDescriptorHeap(
+    &heapDesc, IID_PPV_ARGS(&mainDescriptorHeap)
+  );
+  win32_CheckSucceeded(hr);
+
+  InitializeTextureFromFileName(L"../test_assets/cat.png", 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  InitializeTextureFromFileName(L"../test_assets/dog.png", 1, &dog_tex.textureBuffer,
+    &dog_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
@@ -826,8 +757,13 @@ void UpdatePipeline()
   ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
   commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
+  u32 offset = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
   // set the descriptor table to the descriptor heap
-  commandList->SetGraphicsRootDescriptorTable(1, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+  D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+  gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)0) * (INT64)offset);
+  
+  commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
 
   // draw cubes
   commandList->RSSetViewports(1, &viewport); // set the viewports
@@ -839,6 +775,12 @@ void UpdatePipeline()
   // first cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress());
   commandList->DrawIndexedInstanced(cube.numIndices, 1, 0, 0, 0);
+
+  // set the descriptor table to the descriptor heap
+  gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+  gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)1) * (INT64)offset);
+  
+  commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
 
   // second cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
