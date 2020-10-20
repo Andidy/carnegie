@@ -19,7 +19,6 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
     tsin += 2.0f * PI * (1.0f / (f32)wavePeriod);
   }
 }
-
 /* --------------- SOUND --------------- */
 
 internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input* Input, game_SoundBuffer* soundBuffer)
