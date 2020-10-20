@@ -120,7 +120,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
       game_Memory gameMemory = { 0 };
       gameMemory.isInitialized = false;
-      gameMemory.size = Gigabytes((u64)4);
+      gameMemory.size = Gigabytes((u64)6);
       gameMemory.data = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
       gameMemory.scratchsize = Gigabytes((u64)2);
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
