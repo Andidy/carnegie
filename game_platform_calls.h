@@ -26,6 +26,7 @@ struct ImageData
   i32 size;
   i32 bytesPerRow;
   // i32 format_enum_num; ??? to store dxgi format from LoadImageFromDisk
+  //                          to use in LoadTextureFromImage's format assignment
 };
 
 internal i32 LoadImageFromDisk(char* filename, ImageData* imageData);
