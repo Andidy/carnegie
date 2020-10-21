@@ -1,13 +1,9 @@
 #pragma once
 
 #include <d3d12.h>
-
-struct ImageData
-{
-  BYTE* data;
-  i32 size;
-  i32 bytesPerRow;
-};
+#include <dxgi1_6.h>
+#include "game_platform_calls.h"
+#include "carnegie.h"
 
 struct Vertex
 {
@@ -98,4 +94,5 @@ struct Texture
 };
 Texture cat_tex;
 Texture dog_tex;
+Texture bird_tex;
 

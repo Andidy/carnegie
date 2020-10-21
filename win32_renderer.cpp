@@ -648,18 +648,29 @@ void InitD3D(HWND window)
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 2;
+  heapDesc.NumDescriptors = 3;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
     &heapDesc, IID_PPV_ARGS(&mainDescriptorHeap)
   );
   win32_CheckSucceeded(hr);
+  
 
-  InitializeTextureFromFileName(L"../test_assets/cat.png", 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  ImageData cat_img;
+  LoadImageFromDisk("../test_assets/cat.png", &cat_img);
+  UploadTextureFromImage(&cat_img, 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
-  InitializeTextureFromFileName(L"../test_assets/dog.png", 1, &dog_tex.textureBuffer,
+  ImageData dog_img;
+  LoadImageFromDisk("../test_assets/dog.png", &dog_img);
+  UploadTextureFromImage(&dog_img, 1, &dog_tex.textureBuffer,
     &dog_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  ImageData bird_img;
+  LoadImageFromDisk("../test_assets/bird.png", &bird_img);
+  UploadTextureFromImage(&bird_img, 2, &bird_tex.textureBuffer,
+    &bird_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
@@ -753,6 +764,13 @@ void UpdatePipeline()
 
   commandList->SetGraphicsRootSignature(renderer.rootSignature);
 
+  // draw cubes
+  commandList->RSSetViewports(1, &viewport); // set the viewports
+  commandList->RSSetScissorRects(1, &scissorRect); // set the scissor rects
+  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
+  commandList->IASetVertexBuffers(0, 1, &cube.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
+  commandList->IASetIndexBuffer(&cube.indexBufferView);
+
   // set the descriptor heap
   ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
   commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
@@ -762,15 +780,8 @@ void UpdatePipeline()
   // set the descriptor table to the descriptor heap
   D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
   gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)0) * (INT64)offset);
-  
-  commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
 
-  // draw cubes
-  commandList->RSSetViewports(1, &viewport); // set the viewports
-  commandList->RSSetScissorRects(1, &scissorRect); // set the scissor rects
-  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
-  commandList->IASetVertexBuffers(0, 1, &cube.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
-  commandList->IASetIndexBuffer(&cube.indexBufferView);
+  commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
 
   // first cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress());
@@ -788,6 +799,12 @@ void UpdatePipeline()
 
   commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
   commandList->IASetIndexBuffer(&quad.indexBufferView);
+
+  // set the descriptor table to the descriptor heap
+  gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+  gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)2) * (INT64)offset);
+
+  commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
 
   // first quad
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 2 * constantBufferPerObjectAlignedSize);

@@ -1,16 +1,9 @@
 #include "win32_renderer.h"
 
-void InitializeTextureFromFileName(LPCWSTR filename, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList)
+void UploadTextureFromImage(ImageData* imageData, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList)
 {
-  ImageData imageData = { 0 };
   D3D12_RESOURCE_DESC textureDesc = { 0 };
-  imageData.size = LoadImageDataFromFile(&imageData.data, &textureDesc, filename, &imageData.bytesPerRow);
-  if (imageData.size <= 0)
-  {
-    win32_running = false;
-    OutputDebugStringA("Failed to load test image");
-    return;
-  }
+  LoadTextureFromImage(imageData, &textureDesc);
 
   hr = _device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -39,9 +32,9 @@ void InitializeTextureFromFileName(LPCWSTR filename, i32 index, ID3D12Resource**
 
   // Store texture data in upload heap
   D3D12_SUBRESOURCE_DATA textureData = { 0 };
-  textureData.pData = &imageData.data[0];
-  textureData.RowPitch = imageData.bytesPerRow;
-  textureData.SlicePitch = imageData.bytesPerRow;
+  textureData.pData = &imageData->data[0];
+  textureData.RowPitch = imageData->bytesPerRow;
+  textureData.SlicePitch = imageData->bytesPerRow;
 
   // now we copy the upload buffer contents to the default heap
   UpdateSubresources(commandList, *textureBuffer, *textureBufferUploadHeap, 0, 0, 1, &textureData);
@@ -54,13 +47,13 @@ void InitializeTextureFromFileName(LPCWSTR filename, i32 index, ID3D12Resource**
   srvDesc.Format = textureDesc.Format;
   srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
   srvDesc.Texture2D.MipLevels = 1;
-  
-  
+
+
   D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle = (*mainDescHeap)->GetCPUDescriptorHandleForHeapStart();
   u32 offset = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   cpuDescriptorHandle.ptr = (SIZE_T)(((INT64)cpuDescriptorHandle.ptr) + ((INT64)index) * (INT64)offset);
 
-  _device->CreateShaderResourceView(*textureBuffer, &srvDesc, 
+  _device->CreateShaderResourceView(*textureBuffer, &srvDesc,
     cpuDescriptorHandle);
   win32_CheckSucceeded(hr);
 }
