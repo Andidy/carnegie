@@ -45,6 +45,10 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1} };
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5} };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25} };
+
+    ImageData cat_img;
+    #pragma warning(suppress : 4189)
+    i32 res = LoadImageFromDisk("../test_assets/cat.png", &cat_img);
   }
 
   if (keyDown(Input->keyboard.a))
