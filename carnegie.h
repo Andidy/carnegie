@@ -47,6 +47,8 @@ struct game_Memory
 #include "game_input.cpp"
 #include "game_platform_calls.h"
 
+#include "game_proc_gen.cpp"
+
 internal void GameUpdateAndPrepareRenderData(game_Memory* game_Memory, game_Input* Input, game_SoundBuffer* soundBuffer);
 
 /* Game Only */

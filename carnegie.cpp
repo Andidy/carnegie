@@ -51,6 +51,9 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
     LoadImageFromDisk("../test_assets/bird.png", &(gameState->bird_img));
+
+    ProcGen();
+
     return;
   }
 
