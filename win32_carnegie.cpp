@@ -124,6 +124,9 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       gameMemory.data = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
       gameMemory.scratchsize = Gigabytes((u64)2);
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+      
+      // Probably want to change this to being its own function call
+      GameUpdateAndPrepareRenderData(&gameMemory, newInput, NULL);
 
       /* Enable D3D12 Debug layers */
       hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
@@ -132,7 +135,8 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       debugController->EnableDebugLayer();
 
       // Init D3D12
-      InitD3D(window);
+      InitD3D(window, &gameMemory);
+
 
       // GAME LOOP ----------------------------------------------
 
@@ -184,7 +188,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         window_width = dim.width;
         window_height = dim.height;
         window_aspectRatio = (f32)window_width / (f32)window_height;
-        
+
         GameUpdateAndPrepareRenderData(&gameMemory, newInput, &soundBuffer);
 
         // Direct Sound Test Continued

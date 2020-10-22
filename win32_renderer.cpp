@@ -47,7 +47,7 @@ void WaitForPreviousFrame()
   renderer.fenceValue[renderer.frameIndex]++;
 }
 
-void InitD3D(HWND window)
+void InitD3D(HWND window, game_Memory* gameMemory)
 {
   /* Create the device */
   IDXGIFactory4* dxgiFactory;
@@ -656,19 +656,14 @@ void InitD3D(HWND window)
   );
   win32_CheckSucceeded(hr);
   
+  game_State* gameState = (game_State*)gameMemory->data;
+  
+  UploadTextureFromImage(&(gameState->cat_img), 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
-  ImageData cat_img;
-  LoadImageFromDisk("../test_assets/cat.png", &cat_img);
-  UploadTextureFromImage(&cat_img, 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  ImageData dog_img;
-  LoadImageFromDisk("../test_assets/dog.png", &dog_img);
-  UploadTextureFromImage(&dog_img, 1, &dog_tex.textureBuffer,
+  UploadTextureFromImage(&(gameState->dog_img), 1, &dog_tex.textureBuffer,
     &dog_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
-  ImageData bird_img;
-  LoadImageFromDisk("../test_assets/bird.png", &bird_img);
-  UploadTextureFromImage(&bird_img, 2, &bird_tex.textureBuffer,
+  UploadTextureFromImage(&(gameState->bird_img), 2, &bird_tex.textureBuffer,
     &bird_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
 
@@ -719,6 +714,7 @@ void InitD3D(HWND window)
   scissorRect.bottom = window_height;
 
   OutputDebugStringA("Successfully Initialized D3D\n");
+  
 }
 
 void UpdatePipeline()

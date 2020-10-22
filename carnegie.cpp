@@ -24,6 +24,8 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input* Input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
+  
+  // Probably want to change this to being its own function call
   if (!gameMemory->isInitialized)
   {
     gameMemory->isInitialized = true;
@@ -46,9 +48,10 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5} };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25} };
 
-    ImageData cat_img;
-    #pragma warning(suppress : 4189)
-    i32 res = LoadImageFromDisk("../test_assets/cat.png", &cat_img);
+    LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
+    LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
+    LoadImageFromDisk("../test_assets/bird.png", &(gameState->bird_img));
+    return;
   }
 
   if (keyDown(Input->keyboard.a))
