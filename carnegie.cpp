@@ -21,7 +21,43 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 }
 /* --------------- SOUND --------------- */
 
-internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input* Input, game_SoundBuffer* soundBuffer)
+
+
+
+
+
+
+
+void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
+{
+  if (keyDown(input->keyboard.w))
+  {
+    camera->pos.y += 0.001f;
+    camera->target.y += 0.001f;
+  }
+
+  if (keyDown(input->keyboard.s))
+  {
+    camera->pos.y -= 0.001f;
+    camera->target.y -= 0.001f;
+  }
+
+  if (keyDown(input->keyboard.a))
+  {
+    camera->pos.x -= 0.001f;
+    camera->target.x -= 0.001f;
+  }
+
+  if (keyDown(input->keyboard.d))
+  {
+    camera->pos.x += 0.001f;
+    camera->target.x += 0.001f;
+  }
+
+  camera->view = LookAtMat(camera->pos, camera->target, camera->up);
+}
+
+internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input* input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
   
@@ -47,23 +83,26 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1} };
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5} };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25} };
+    gameState->entities[3] = { {0, 0, 4}, {0, 0, 0}, {1, 1, 1} };
 
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
     LoadImageFromDisk("../test_assets/bird.png", &(gameState->bird_img));
+
+    LoadImageFromDisk("../test_assets/map_data.png", &(gameState->map_img));
+    LoadImageFromDisk("../test_assets/tileset.png", &(gameState->tileset_img));
 
     ProcGen();
 
     return;
   }
 
-  if (keyDown(Input->keyboard.a))
+  UpdateCamera(&gameState->camera, input, gameState);
+
+  gameState->entities[0].pos.y += gameState->entities[0].vel.y;
+  if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))
   {
-    gameState->entities[0].pos.y += gameState->entities[0].vel.y;
-    if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))
-    {
-      gameState->entities[0].vel.y *= -1;
-    }
+    gameState->entities[0].vel.y *= -1;
   }
 
   gameState->entities[1].pos.x += gameState->entities[1].vel.x;
