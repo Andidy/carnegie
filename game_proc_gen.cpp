@@ -10,7 +10,7 @@
 
 void ProcGen()
 {
-  u32 seed = 100;
+  u32 seed = 123;
   u32 map_width = 2000;
   u32 map_height = 1000;
 
@@ -56,7 +56,7 @@ void ProcGen()
       {
         n = 1;
       }
-      n = powf(n, 1.5f);
+      n = powf(n, 2.0f);
       n *= 255.0f;
 
       // assign the generated noise data to its tile
