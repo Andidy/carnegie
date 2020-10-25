@@ -322,6 +322,159 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&renderer.pipelineStateObject));
   win32_CheckSucceeded(hr);
 
+
+
+
+
+  ////////////////////////////////////////////////////////////
+  // PSO for tilemap
+
+  // I need:
+  // 2 textures
+  // 1 vertex buffer
+  // 1 index buffer
+
+  // Create RootSignature
+  // Create a root descriptor
+  D3D12_ROOT_DESCRIPTOR tilemaprootCBVDescriptor = { 0 };
+  tilemaprootCBVDescriptor.RegisterSpace = 0;
+  tilemaprootCBVDescriptor.ShaderRegister = 0;
+  
+  // create a descriptor range (descriptor table) and fill it out
+  // this is a range of descriptors inside a descriptor heap
+  D3D12_DESCRIPTOR_RANGE tilemapDescTblRanges[1];
+  tilemapDescTblRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+  tilemapDescTblRanges[0].NumDescriptors = 2;
+  tilemapDescTblRanges[0].BaseShaderRegister = 0;
+  tilemapDescTblRanges[0].RegisterSpace = 0;
+  tilemapDescTblRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+  // create a descriptor table
+  D3D12_ROOT_DESCRIPTOR_TABLE tilemapDescTbl;
+  tilemapDescTbl.NumDescriptorRanges = _countof(tilemapDescTblRanges);
+  tilemapDescTbl.pDescriptorRanges = &tilemapDescTblRanges[0];
+
+  // Create a root parameter
+  D3D12_ROOT_PARAMETER tilemapRootParams[2];
+  tilemapRootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+  tilemapRootParams[0].Descriptor = tilemaprootCBVDescriptor;
+  tilemapRootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+  
+  tilemapRootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+  tilemapRootParams[1].DescriptorTable = tilemapDescTbl;
+  tilemapRootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+  // Create static sampler
+  D3D12_STATIC_SAMPLER_DESC tilemapSampler1 = { 0 };
+  tilemapSampler1.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+  tilemapSampler1.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+  tilemapSampler1.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+  tilemapSampler1.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+  tilemapSampler1.MipLODBias = 0;
+  tilemapSampler1.MaxAnisotropy = 0;
+  tilemapSampler1.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+  tilemapSampler1.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+  tilemapSampler1.MinLOD = 0.0f;
+  tilemapSampler1.MaxLOD = D3D12_FLOAT32_MAX;
+  tilemapSampler1.ShaderRegister = 0;
+  tilemapSampler1.RegisterSpace = 0;
+  tilemapSampler1.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+  
+  D3D12_STATIC_SAMPLER_DESC tilemapSampler2 = tilemapSampler1;
+  tilemapSampler2.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+  tilemapSampler2.ShaderRegister = 1;
+
+  D3D12_STATIC_SAMPLER_DESC tilemapSamplers[] = { tilemapSampler1, tilemapSampler2 };
+
+  D3D12_ROOT_SIGNATURE_DESC tilemapRootSigDesc;
+  tilemapRootSigDesc.NumParameters = _countof(tilemapRootParams);
+  tilemapRootSigDesc.pParameters = tilemapRootParams;
+  tilemapRootSigDesc.NumStaticSamplers = 2;
+  tilemapRootSigDesc.pStaticSamplers = tilemapSamplers;
+  tilemapRootSigDesc.Flags =
+    D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+    | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
+    | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
+    | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+
+  ID3DBlob* tilemapSignature;
+  hr = D3D12SerializeRootSignature(&tilemapRootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &tilemapSignature, &errorBuff);
+  if (FAILED(hr))
+  {
+    OutputDebugStringA((char*)errorBuff->GetBufferPointer());
+    __debugbreak();
+  }
+  win32_CheckSucceeded(hr);
+
+  hr = device->CreateRootSignature(0, tilemapSignature->GetBufferPointer(), tilemapSignature->GetBufferSize(), IID_PPV_ARGS(&renderer.tilemapRootSig));
+  win32_CheckSucceeded(hr);
+
+  // good to here
+
+  // Shaders
+  // compile and create vertex shader
+  //ID3DBlob* tilemapVertShader;
+  ID3DBlob* tilemapErrorBuff;
+  /*
+  hr = D3DCompileFromFile(L"../VertexShader.hlsl", 0, 0, "main", "vs_5_0",
+    D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &tilemapVertShader, &tilemapErrorBuff);
+  if (FAILED(hr))
+  {
+    OutputDebugStringA((char*)tilemapErrorBuff->GetBufferPointer());
+    __debugbreak();
+  }
+  D3D12_SHADER_BYTECODE tilemapvertexShaderBytecode = { 0 };
+  tilemapvertexShaderBytecode.BytecodeLength = tilemapVertShader->GetBufferSize();
+  tilemapvertexShaderBytecode.pShaderBytecode = tilemapVertShader->GetBufferPointer();
+  */
+  // compile and create pixel shader
+  ID3DBlob* tilemappixelShader;
+  hr = D3DCompileFromFile(L"../TilemapPixelShader.hlsl", 0, 0, "main", "ps_5_0",
+    D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &tilemappixelShader, &tilemapErrorBuff);
+  if (FAILED(hr))
+  {
+    OutputDebugStringA((char*)tilemapErrorBuff->GetBufferPointer());
+    __debugbreak();
+  }
+  D3D12_SHADER_BYTECODE tilemappixelShaderBytecode = { 0 };
+  tilemappixelShaderBytecode.BytecodeLength = tilemappixelShader->GetBufferSize();
+  tilemappixelShaderBytecode.pShaderBytecode = tilemappixelShader->GetBufferPointer();
+
+  // create input layout
+  D3D12_INPUT_ELEMENT_DESC tilemapinputLayout[] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+  };
+  D3D12_INPUT_LAYOUT_DESC tilemapinputLayoutDesc = { 0 };
+  tilemapinputLayoutDesc.NumElements = sizeof(tilemapinputLayout) / sizeof(D3D12_INPUT_ELEMENT_DESC);
+  tilemapinputLayoutDesc.pInputElementDescs = tilemapinputLayout;
+
+  // create a pipeline state object (PSO)
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC tilemapPSODesc = { 0 };
+  tilemapPSODesc.InputLayout = tilemapinputLayoutDesc;
+  tilemapPSODesc.pRootSignature = renderer.tilemapRootSig;
+  tilemapPSODesc.VS = vertexShaderBytecode;
+  tilemapPSODesc.PS = tilemappixelShaderBytecode;
+  tilemapPSODesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+  tilemapPSODesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+  tilemapPSODesc.SampleDesc.Count = 1;
+  tilemapPSODesc.SampleMask = 0xffffffff;
+  tilemapPSODesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+  tilemapPSODesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+  tilemapPSODesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+  tilemapPSODesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+  tilemapPSODesc.NumRenderTargets = 1;
+  hr = device->CreateGraphicsPipelineState(&tilemapPSODesc, IID_PPV_ARGS(&renderer.tilemapPSO));
+  win32_CheckSucceeded(hr);
+
+
+
+
+
+
+
   // here
   // Create vertex buffer
   Vertex vList[] = {
@@ -648,7 +801,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 3;
+  heapDesc.NumDescriptors = 5;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
@@ -666,6 +819,11 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   UploadTextureFromImage(&(gameState->bird_img), 2, &bird_tex.textureBuffer,
     &bird_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
+  UploadTextureFromImage(&(gameState->map_img), 3, &map_tex.textureBuffer,
+    &map_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  UploadTextureFromImage(&(gameState->tileset_img), 4, &tileset_tex.textureBuffer,
+    &tileset_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
@@ -733,9 +891,6 @@ void UpdatePipeline()
   // that any other command lists associated to this command allocator are in
   // the closed state (not recording).
   // Here you will pass an initial pipeline state object as the second parameter,
-  // but in this tutorial we are only clearing the rtv, and do not actually need
-  // anything but an initial default pipeline, which is what we get by setting
-  // the second parameter to NULL
   hr = commandList->Reset(commandAllocator[renderer.frameIndex], renderer.pipelineStateObject);
   win32_CheckSucceeded(hr);
 
@@ -757,14 +912,14 @@ void UpdatePipeline()
   const f32 clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
   commandList->ClearRenderTargetView(cpuDescriptorHandle, clearColor, 0, 0);
   commandList->ClearDepthStencilView(dsDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, 0);
-
-  commandList->SetGraphicsRootSignature(renderer.rootSignature);
-
+  
+  commandList->RSSetViewports(1, &viewport);
+  commandList->RSSetScissorRects(1, &scissorRect);
+  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  
   // draw cubes
-  commandList->RSSetViewports(1, &viewport); // set the viewports
-  commandList->RSSetScissorRects(1, &scissorRect); // set the scissor rects
-  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
-  commandList->IASetVertexBuffers(0, 1, &cube.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
+  commandList->SetGraphicsRootSignature(renderer.rootSignature);
+  commandList->IASetVertexBuffers(0, 1, &cube.vertexBufferView);
   commandList->IASetIndexBuffer(&cube.indexBufferView);
 
   // set the descriptor heap
@@ -773,37 +928,41 @@ void UpdatePipeline()
 
   u32 offset = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-  // set the descriptor table to the descriptor heap
+  // first cube
   D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
   gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)0) * (INT64)offset);
-
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
-
-  // first cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress());
   commandList->DrawIndexedInstanced(cube.numIndices, 1, 0, 0, 0);
 
-  // set the descriptor table to the descriptor heap
+  // second cube
   gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
   gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)1) * (INT64)offset);
-  
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
-
-  // second cube
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(cube.numIndices, 1, 0, 0, 0);
 
-  commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView); // set the vertex buffer (using the vertex buffer view)
+  // Switch to quads
+  commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView);
   commandList->IASetIndexBuffer(&quad.indexBufferView);
 
-  // set the descriptor table to the descriptor heap
+  // first quad
   gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
   gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)2) * (INT64)offset);
-
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
-
-  // first quad
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 2 * constantBufferPerObjectAlignedSize);
+  commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
+
+
+  commandList->SetPipelineState(renderer.tilemapPSO);
+  commandList->SetGraphicsRootSignature(renderer.tilemapRootSig);
+
+  commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView);
+  commandList->IASetIndexBuffer(&quad.indexBufferView);
+  gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+  gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)3) * (INT64)offset);
+  commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 3 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a

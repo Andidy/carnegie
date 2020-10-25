@@ -55,6 +55,9 @@ struct Renderer
   ID3D12RootSignature* rootSignature;
   ID3D12PipelineState* pipelineStateObject;
 
+  ID3D12RootSignature* tilemapRootSig;
+  ID3D12PipelineState* tilemapPSO;
+
   // synchronization objects
   UINT frameIndex;
   HANDLE fenceEvent;
@@ -96,3 +99,5 @@ Texture cat_tex;
 Texture dog_tex;
 Texture bird_tex;
 
+Texture map_tex;
+Texture tileset_tex;
