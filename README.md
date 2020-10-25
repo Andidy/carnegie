@@ -6,7 +6,7 @@ Todo:
 
 - In no particular order:
 - [ ] Entity System
-- [ ] Expand Keyboard Input
+- [X] Expand Keyboard Input (Just need to add new entries in Keyboard struct check for them in the input update function to enable more keys)
 - [ ] Mouse Input
 - [ ] Camera Movement
 - [ ] Finish OBJ loader / integrate Assimp
