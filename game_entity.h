@@ -1,7 +1,5 @@
 #pragma once
 
-#include "game_types.h"
-
 struct Entity
 {
   vec3 pos;

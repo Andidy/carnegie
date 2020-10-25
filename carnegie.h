@@ -5,8 +5,6 @@
 #include "ady_math.h"
 #include <math.h>
 
-#include "game_entity.h"
-
 // Macros //
 #define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
 
@@ -44,8 +42,11 @@ struct game_Memory
   void* scratchdata; // NOTE: Must be cleared to ZERO at startup
 };
 
-#include "game_input.cpp"
 #include "game_platform_calls.h"
+#include "game_input.cpp"
+
+#include "game_camera.h"
+#include "game_entity.h"
 
 #include "game_proc_gen.cpp"
 
@@ -53,7 +54,7 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* game_Memory, game_Inpu
 
 /* Game Only */
 
-const i32 NUM_ENTITIES = 3;
+const i32 NUM_ENTITIES = 4;
 struct game_State
 {
   i32 toneHertz;
@@ -64,6 +65,9 @@ struct game_State
   ImageData cat_img;
   ImageData dog_img;
   ImageData bird_img;
+
+  ImageData map_img;
+  ImageData tileset_img;
 };
 
 #endif

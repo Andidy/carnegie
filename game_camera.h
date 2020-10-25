@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ady_types.h"
+
 struct Camera
 {
   vec3 pos;
