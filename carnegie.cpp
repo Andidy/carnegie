@@ -71,7 +71,7 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     mat4 projmat = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
 
     // set starting camera state
-    vec3 cameraPos = Vec3(0.0f, 2.0f, -4.0f);
+    vec3 cameraPos = Vec3(0.0f, 0.0f, -10.0f);
     vec3 cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
     vec3 cameraUp = Vec3(0.0f, 1.0f, 0.0f);
 
@@ -83,7 +83,7 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1} };
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5} };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25} };
-    gameState->entities[3] = { {0, 0, 4}, {0, 0, 0}, {1, 1, 1} };
+    gameState->entities[3] = { {0, 0, -1}, {0, 0, 0}, {10, 10, 1} };
 
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
