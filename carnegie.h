@@ -54,7 +54,7 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* game_Memory, game_Inpu
 
 /* Game Only */
 
-const i32 NUM_ENTITIES = 4;
+const i32 NUM_ENTITIES = 5;
 struct game_State
 {
   i32 toneHertz;
@@ -67,6 +67,7 @@ struct game_State
   ImageData bird_img;
 
   ImageData map_img;
+  ImageData map2_img;
   ImageData tileset_img;
 };
 

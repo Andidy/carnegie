@@ -263,8 +263,10 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // compile pixel shader
   ID3DBlob* pixelShader;
-  hr = D3DCompileFromFile(L"../PixelShader.hlsl", 0, 0, "main", "ps_5_0",
-    D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelShader, &errorBuff);
+  hr = D3DCompileFromFile(L"../PixelShader.hlsl", 0, 0, "main", "ps_5_1",
+    D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | 
+    D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES,
+    0, &pixelShader, &errorBuff);
   if (FAILED(hr))
   {
     OutputDebugStringA((char*)errorBuff->GetBufferPointer());
@@ -344,7 +346,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   // this is a range of descriptors inside a descriptor heap
   D3D12_DESCRIPTOR_RANGE tilemapDescTblRanges[1];
   tilemapDescTblRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-  tilemapDescTblRanges[0].NumDescriptors = 2;
+  tilemapDescTblRanges[0].NumDescriptors = 6;
   tilemapDescTblRanges[0].BaseShaderRegister = 0;
   tilemapDescTblRanges[0].RegisterSpace = 0;
   tilemapDescTblRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -429,8 +431,10 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   */
   // compile and create pixel shader
   ID3DBlob* tilemappixelShader;
-  hr = D3DCompileFromFile(L"../TilemapPixelShader.hlsl", 0, 0, "main", "ps_5_0",
-    D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &tilemappixelShader, &tilemapErrorBuff);
+  hr = D3DCompileFromFile(L"../TilemapPixelShader.hlsl", 0, 0, "main", "ps_5_1",
+    D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | 
+    D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES,
+    0, &tilemappixelShader, &tilemapErrorBuff);
   if (FAILED(hr))
   {
     OutputDebugStringA((char*)tilemapErrorBuff->GetBufferPointer());
@@ -801,7 +805,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 5;
+  heapDesc.NumDescriptors = 6;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
@@ -822,7 +826,10 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   UploadTextureFromImage(&(gameState->map_img), 3, &map_tex.textureBuffer,
     &map_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
-  UploadTextureFromImage(&(gameState->tileset_img), 4, &tileset_tex.textureBuffer,
+  UploadTextureFromImage(&(gameState->map2_img), 4, &map2_tex.textureBuffer,
+    &map2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  UploadTextureFromImage(&(gameState->tileset_img), 5, &tileset_tex.textureBuffer,
     &tileset_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
@@ -926,10 +933,11 @@ void UpdatePipeline()
   ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
   commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-  u32 offset = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-  // first cube
+  // u32 offset = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+  /*
+  // first cube
+  
   gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)0) * (INT64)offset);
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress());
@@ -941,28 +949,32 @@ void UpdatePipeline()
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(cube.numIndices, 1, 0, 0, 0);
-
+  */
   // Switch to quads
   commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView);
   commandList->IASetIndexBuffer(&quad.indexBufferView);
 
   // first quad
+  /*
   gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
   gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)2) * (INT64)offset);
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 2 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
-
-
+  */
+  // Tilemaps
   commandList->SetPipelineState(renderer.tilemapPSO);
   commandList->SetGraphicsRootSignature(renderer.tilemapRootSig);
 
   commandList->IASetVertexBuffers(0, 1, &quad.vertexBufferView);
   commandList->IASetIndexBuffer(&quad.indexBufferView);
   gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-  gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)3) * (INT64)offset);
+  //gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)3) * (INT64)offset);
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 3 * constantBufferPerObjectAlignedSize);
+  commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
+
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 4 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
@@ -1024,6 +1036,8 @@ void Update(HWND window, game_Memory* gameMemory)
     mat4 mvp = MulMat(vp, model);
 
     cbPerObject.mvp = mvp;
+    cbPerObject.map_index = gameState->entities[i].layer;
+    cbPerObject.tileset_index = 5;
     memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   }
 }

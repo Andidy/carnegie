@@ -18,6 +18,8 @@ struct Vertex
 struct ConstantBufferPerObject
 {
   mat4 mvp;
+  i32 map_index;
+  i32 tileset_index;
 };
 
 // Constant buffers must be 256-byte aligned which has to do with constant reads on the GPU.
@@ -102,4 +104,5 @@ Texture dog_tex;
 Texture bird_tex;
 
 Texture map_tex;
+Texture map2_tex;
 Texture tileset_tex;

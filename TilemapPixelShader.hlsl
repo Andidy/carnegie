@@ -1,6 +1,4 @@
-Texture2D tilemap : register(t0);
-Texture2D tileset : register(t1);
-//Texture2DArray tileset : register(t1);
+Texture2D tex[] : register(t0);
 SamplerState pix : register(s0);
 SamplerState lin : register(s1);
 
@@ -9,6 +7,8 @@ struct VS_OUTPUT
 	float4 pos : SV_POSITION;
 	float4 color : COLOR;
 	float2 texcoord : TEXCOORD;
+	int map_index : MAP_INDEX;
+	int tileset_index : TILESET_INDEX;
 };
 
 float4 main(VS_OUTPUT input) : SV_TARGET
@@ -28,13 +28,13 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 
 	//tilemap_coord.x = tilemap_coord.x + 0.5;
 	//tilemap_coord.y = tilemap_coord.y + 0.5;
-	int tile_index = 255.0 * tilemap.Sample(pix, tilemap_coord / f_tilemap_dim).r;
+	int tile_index = int(255.0 * tex[input.map_index].Sample(pix, tilemap_coord / f_tilemap_dim).r);
 
 	int2 tileset_offset = int2(tile_index % tileset_dim.x, tile_index / tileset_dim.y);
 
 	tileset_uv = (tileset_uv + float2(tileset_offset)) / f_tileset_dim;
 
-	float4 col = tileset.Sample(pix, tileset_uv).rgba;
+	float4 col = tex[input.tileset_index].Sample(pix, tileset_uv).rgba;
 	
 	if (col.a < 0.9) discard;
 
