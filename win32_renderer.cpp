@@ -805,7 +805,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 6;
+  heapDesc.NumDescriptors = 11;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
@@ -831,6 +831,18 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   UploadTextureFromImage(&(gameState->tileset_img), 5, &tileset_tex.textureBuffer,
     &tileset_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  UploadTextureFromImage(&(gameState->unit_img), 6, &unit_tex.textureBuffer,
+    &unit_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  UploadTextureFromImage(&(gameState->unit_tileset_1_img), 7, &anim_1.textureBuffer,
+    &anim_1.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_tileset_2_img), 8, &anim_2.textureBuffer,
+    &anim_2.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_tileset_3_img), 9, &anim_3.textureBuffer,
+    &anim_3.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_tileset_4_img), 10, &anim_4.textureBuffer,
+    &anim_4.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
@@ -977,6 +989,9 @@ void UpdatePipeline()
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 4 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 5 * constantBufferPerObjectAlignedSize);
+  commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
+
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a
   // warning if present is called on the render target when it's not in the present state
   resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -1036,8 +1051,8 @@ void Update(HWND window, game_Memory* gameMemory)
     mat4 mvp = MulMat(vp, model);
 
     cbPerObject.mvp = mvp;
-    cbPerObject.map_index = gameState->entities[i].layer;
-    cbPerObject.tileset_index = 5;
+    cbPerObject.map_index = gameState->entities[i].data_layer;
+    cbPerObject.tileset_index = gameState->entities[i].sprite_layer;
     memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   }
 }

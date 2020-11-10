@@ -106,3 +106,9 @@ Texture bird_tex;
 Texture map_tex;
 Texture map2_tex;
 Texture tileset_tex;
+
+Texture unit_tex;
+Texture anim_1;
+Texture anim_2;
+Texture anim_3;
+Texture anim_4;

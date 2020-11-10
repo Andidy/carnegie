@@ -58,11 +58,11 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
   win32_LoadXInput();
 
   // Timing Info
-  /*
+  
   LARGE_INTEGER perftimerfreqresult;
   QueryPerformanceFrequency(&perftimerfreqresult);
   i64 perftimerfreq = perftimerfreqresult.QuadPart;
-  */
+  
 
   window_width = 1200;
   window_height = 900;
@@ -108,11 +108,11 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       // Configs and Tickers
       win32_running = true;
 
-      /*
+      
       LARGE_INTEGER lasttimer;
       QueryPerformanceCounter(&lasttimer);
       u64 lastcyclecount = __rdtsc();
-      */
+      
 
       game_Input gameInput[2] = { 0 };
       game_Input* newInput = &gameInput[0];
@@ -126,7 +126,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
       
       // Probably want to change this to being its own function call
-      GameUpdateAndPrepareRenderData(&gameMemory, newInput, NULL);
+      GameUpdateAndPrepareRenderData(0, &gameMemory, newInput, NULL);
 
       /* Enable D3D12 Debug layers */
       hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
@@ -142,6 +142,26 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
       while(win32_running)
       {
+        #pragma region timing
+
+        LARGE_INTEGER endtimer;
+        QueryPerformanceCounter(&endtimer);
+        i64 timerelapsed = endtimer.QuadPart - lasttimer.QuadPart;
+        f32 msperframe = (f32)((1000.0f * (f32)timerelapsed) / (f32)perftimerfreq);
+        i64 fps = (i64)(perftimerfreq / timerelapsed);
+
+        u64 endcyclecount = __rdtsc();
+        u64 cycleselapsed = endcyclecount - lastcyclecount;
+
+        char str_buffer[256];
+        sprintf_s(str_buffer, "ms / frame: %f, fps: %I64d, %I64u\n", msperframe, fps, cycleselapsed);
+        OutputDebugStringA(str_buffer);
+
+        lasttimer = endtimer;
+        lastcyclecount = endcyclecount;
+
+        #pragma endregion
+        
         ++counter;
         
         // Input
@@ -189,7 +209,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         window_height = dim.height;
         window_aspectRatio = (f32)window_width / (f32)window_height;
 
-        GameUpdateAndPrepareRenderData(&gameMemory, newInput, &soundBuffer);
+        GameUpdateAndPrepareRenderData(msperframe, &gameMemory, newInput, &soundBuffer);
 
         // Direct Sound Test Continued
         if(soundIsValid)
@@ -199,26 +219,6 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
         Update(window, &gameMemory);
         Render();
-
-        #pragma region timing
-        /*
-        LARGE_INTEGER endtimer;
-        QueryPerformanceCounter(&endtimer);
-        i64 timerelapsed = endtimer.QuadPart - lasttimer.QuadPart;
-        f32 msperframe = (f32)((1000.0f * (f32)timerelapsed) / (f32)perftimerfreq);
-        i64 fps = (i64)(perftimerfreq / timerelapsed);
-
-        u64 endcyclecount = __rdtsc();
-        u64 cycleselapsed = endcyclecount - lastcyclecount;
-
-        char str_buffer[256];
-        sprintf(str_buffer, "ms / frame: %f, fps: %I64d, %I64u\n", msperframe, fps, cycleselapsed);
-        OutputDebugStringA(str_buffer);
-
-        lasttimer = endtimer;
-        lastcyclecount = endcyclecount;
-        */
-        #pragma endregion
 
         game_Input* temp = newInput;
         newInput = oldInput;

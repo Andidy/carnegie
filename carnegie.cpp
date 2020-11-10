@@ -30,46 +30,53 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
 {
+  f32 speed = 0.001f * gameState->dt;
+
+  if (keyDown(input->keyboard.space))
+  {
+    speed *= 100;
+  }
+
   if (keyDown(input->keyboard.w))
   {
-    camera->pos.y += 0.001f;
-    camera->target.y += 0.001f;
+    camera->pos.y += speed;
+    camera->target.y += speed;
   }
 
   if (keyDown(input->keyboard.s))
   {
-    camera->pos.y -= 0.001f;
-    camera->target.y -= 0.001f;
+    camera->pos.y -= speed;
+    camera->target.y -= speed;
   }
 
   if (keyDown(input->keyboard.a))
   {
-    camera->pos.x -= 0.001f;
-    camera->target.x -= 0.001f;
+    camera->pos.x -= speed;
+    camera->target.x -= speed;
   }
 
   if (keyDown(input->keyboard.d))
   {
-    camera->pos.x += 0.001f;
-    camera->target.x += 0.001f;
+    camera->pos.x += speed;
+    camera->target.x += speed;
   }
 
   if (keyDown(input->keyboard.r))
   {
-    camera->pos.z += 0.001f;
-    camera->target.z += 0.001f;
+    camera->pos.z += speed;
+    camera->target.z += speed;
   }
 
   if (keyDown(input->keyboard.f))
   {
-    camera->pos.z -= 0.001f;
-    camera->target.z -= 0.001f;
+    camera->pos.z -= speed;
+    camera->target.z -= speed;
   }
 
   camera->view = LookAtMat(camera->pos, camera->target, camera->up);
 }
 
-internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input* input, game_SoundBuffer* soundBuffer)
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, game_Input* input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
   
@@ -77,6 +84,8 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
   if (!gameMemory->isInitialized)
   {
     gameMemory->isInitialized = true;
+    gameState->dt = dt;
+    gameState->anim_timer = 0.0f;
     gameState->toneHertz = 256;
     
     // build proj and view matrix
@@ -95,8 +104,10 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1}, -1};
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
-    gameState->entities[3] = { {0, 0, 1}, {0, 0, 0}, {10, 10, 1}, 3 };
-    gameState->entities[4] = { {0, 0, 1.001f }, {0, 0, 0}, {10, 10, 1}, 4 };
+    gameState->entities[3] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 3, 5 };
+    gameState->entities[4] = { {0, 0, 1.001f }, {0, 0, 0}, {4320, 2160, 1}, 4, 5 };
+
+    gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 6, 7 };
 
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
@@ -106,9 +117,23 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
     LoadImageFromDisk("../test_assets/map2_data.png", &(gameState->map2_img));
     LoadImageFromDisk("../test_assets/tileset.png", &(gameState->tileset_img));
 
+    LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->unit_img));
+    LoadImageFromDisk("../test_assets/unit_anim_1.png", &(gameState->unit_tileset_1_img));
+    LoadImageFromDisk("../test_assets/unit_anim_2.png", &(gameState->unit_tileset_2_img));
+    LoadImageFromDisk("../test_assets/unit_anim_3.png", &(gameState->unit_tileset_3_img));
+    LoadImageFromDisk("../test_assets/unit_anim_4.png", &(gameState->unit_tileset_4_img));
+
     ProcGen();
 
     return;
+  }
+
+  gameState->dt = dt;
+  gameState->anim_timer += dt;
+  if (gameState->anim_timer > 250.0f)
+  {
+    gameState->anim_counter = (gameState->anim_counter + 1) % 4;
+    gameState->anim_timer = 0.0f;
   }
 
   UpdateCamera(&gameState->camera, input, gameState);
@@ -130,6 +155,8 @@ internal void GameUpdateAndPrepareRenderData(game_Memory* gameMemory, game_Input
   {
     gameState->entities[2].vel.z *= -1;
   }
+
+  gameState->entities[5].sprite_layer = gameState->anim_counter + UNIT_ANIM_OFFSET;
 
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
   gameState->camera.view = LookAtMat(gameState->camera.pos, gameState->camera.target, gameState->camera.up);

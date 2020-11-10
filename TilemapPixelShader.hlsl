@@ -15,8 +15,8 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 {
 	const int2 tile_dim = {32, 32};
 	
-	const int2 tilemap_dim = { 10, 10 };
-	const float2 f_tilemap_dim = { 10, 10 };
+	const int2 tilemap_dim = { 4320, 2160 };
+	const float2 f_tilemap_dim = { 4320, 2160 };
 
 	const int2 tileset_dim = { 16, 16 };
 	const float2 f_tileset_dim = { 16, 16 };
