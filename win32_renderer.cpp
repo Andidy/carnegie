@@ -346,7 +346,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   // this is a range of descriptors inside a descriptor heap
   D3D12_DESCRIPTOR_RANGE tilemapDescTblRanges[1];
   tilemapDescTblRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-  tilemapDescTblRanges[0].NumDescriptors = 6;
+  tilemapDescTblRanges[0].NumDescriptors = 9;
   tilemapDescTblRanges[0].BaseShaderRegister = 0;
   tilemapDescTblRanges[0].RegisterSpace = 0;
   tilemapDescTblRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -805,7 +805,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 11;
+  heapDesc.NumDescriptors = 9;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
@@ -835,14 +835,10 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   UploadTextureFromImage(&(gameState->unit_img), 6, &unit_tex.textureBuffer,
     &unit_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
-  UploadTextureFromImage(&(gameState->unit_tileset_1_img), 7, &anim_1.textureBuffer,
-    &anim_1.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-  UploadTextureFromImage(&(gameState->unit_tileset_2_img), 8, &anim_2.textureBuffer,
-    &anim_2.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-  UploadTextureFromImage(&(gameState->unit_tileset_3_img), 9, &anim_3.textureBuffer,
-    &anim_3.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-  UploadTextureFromImage(&(gameState->unit_tileset_4_img), 10, &anim_4.textureBuffer,
-    &anim_4.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_horseman_img), 7, &horseman_anim.textureBuffer,
+    &horseman_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_archer_img), 8, &archer_anim.textureBuffer,
+    &archer_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
@@ -894,7 +890,55 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   
 }
 
-void UpdatePipeline()
+
+void Update(HWND window, game_Memory* gameMemory)
+{
+  game_State* gameState = (game_State*)gameMemory->data;
+  Camera* camera = &(gameState->camera);
+
+  // build vp matrix ---
+  // this can be used for all objects in the world
+  mat4 vp = MulMat(camera->proj, camera->view);
+
+  for (int i = 0; i < NUM_ENTITIES; i++)
+  {
+    mat4 trans = TranslateMat(gameState->entities[i].pos);
+    // mat4 rot = RotateMat();
+    mat4 scale = ScaleMat(gameState->entities[i].scale);
+
+    mat4 model = scale;
+    // model = MulMat(rot, model);
+    model = MulMat(trans, model);
+    mat4 mvp = MulMat(vp, model);
+
+    cbPerObject.mvp = mvp;
+    cbPerObject.is_animated = gameState->entities[i].is_animated;
+    cbPerObject.layer_index = gameState->entities[i].data_layer;
+    cbPerObject.spritesheet_offset = gameState->entities[i].spritesheet_base;
+    cbPerObject.anim_frame = gameState->anim_counter;
+    // cbPerObject.lerp_time = gameState->anim_timer;
+    memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+     
+    if (i == 5) // temporary for unit tilemap
+    {
+      // Store texture data in upload heap
+      D3D12_SUBRESOURCE_DATA textureData = { 0 };
+      textureData.pData = &(gameState->unit_img.data[0]);
+      textureData.RowPitch = gameState->unit_img.bytesPerRow;
+      textureData.SlicePitch = gameState->unit_img.bytesPerRow;
+
+      // transition the texture default heap to a pixel shader resource
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(unit_tex.textureBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+      // now we copy the upload buffer contents to the default heap
+      UpdateSubresources(commandList, unit_tex.textureBuffer, unit_tex.textureBufferUploadHeap, 0, 0, 1, &textureData);
+      // transition the texture default heap to a pixel shader resource
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(unit_tex.textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+    }
+  }
+}
+
+
+void UpdatePipeline(HWND window, game_Memory* gameMemory)
 {
   hr = 0;
 
@@ -912,6 +956,8 @@ void UpdatePipeline()
   // Here you will pass an initial pipeline state object as the second parameter,
   hr = commandList->Reset(commandAllocator[renderer.frameIndex], renderer.pipelineStateObject);
   win32_CheckSucceeded(hr);
+
+  Update(window, gameMemory);
 
   D3D12_RESOURCE_BARRIER resourceBarrier = { 0 };
   resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -1006,11 +1052,11 @@ void UpdatePipeline()
   win32_CheckSucceeded(hr);
 }
 
-void Render()
+void Render(HWND window, game_Memory* gameMemory)
 {
   hr = 0;
 
-  UpdatePipeline();
+  UpdatePipeline(window, gameMemory);
 
   // create an array of command lists (only 1 here)
   ID3D12CommandList* ppCommandLists[] = { commandList };
@@ -1028,33 +1074,6 @@ void Render()
   // present the current back buffer
   hr = swapchain->Present(0, 0);
   win32_CheckSucceeded(hr);
-}
-
-void Update(HWND window, game_Memory* gameMemory)
-{
-  game_State* gameState = (game_State*)gameMemory->data;
-  Camera* camera = &(gameState->camera);
-  
-  // build vp matrix ---
-  // this can be used for all objects in the world
-  mat4 vp = MulMat(camera->proj, camera->view);
-
-  for (int i = 0; i < NUM_ENTITIES; i++)
-  {
-    mat4 trans = TranslateMat(gameState->entities[i].pos);
-    // mat4 rot = RotateMat();
-    mat4 scale = ScaleMat(gameState->entities[i].scale);
-
-    mat4 model = scale;
-    // model = MulMat(rot, model);
-    model = MulMat(trans, model);
-    mat4 mvp = MulMat(vp, model);
-
-    cbPerObject.mvp = mvp;
-    cbPerObject.map_index = gameState->entities[i].data_layer;
-    cbPerObject.tileset_index = gameState->entities[i].sprite_layer;
-    memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
-  }
 }
 
 #pragma endregion

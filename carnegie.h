@@ -55,7 +55,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, g
 /* Game Only */
 
 const i32 NUM_ENTITIES = 6;
-
+const i32 NUM_UNITS = 5;
 const i32 UNIT_ANIM_OFFSET = 7;
 struct game_State
 {
@@ -77,11 +77,11 @@ struct game_State
   f32 anim_timer;
   i32 anim_counter;
 
+  Unit unit[NUM_UNITS];
+
   ImageData unit_img;
-  ImageData unit_tileset_1_img;
-  ImageData unit_tileset_2_img;
-  ImageData unit_tileset_3_img;
-  ImageData unit_tileset_4_img;
+  ImageData unit_horseman_img;
+  ImageData unit_archer_img;
 };
 
 #endif

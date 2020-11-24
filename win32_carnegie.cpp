@@ -217,8 +217,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
           win32_FillSoundBuffer(&soundstruct, byteToLock, bytesToWrite, &soundBuffer);
         }
 
-        Update(window, &gameMemory);
-        Render();
+        Render(window, &gameMemory);
 
         game_Input* temp = newInput;
         newInput = oldInput;

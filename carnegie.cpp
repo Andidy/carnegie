@@ -92,8 +92,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     mat4 projmat = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
 
     // set starting camera state
-    vec3 cameraPos = Vec3(0.0f, 0.0f, -10.0f);
-    vec3 cameraTarget = Vec3(0.0f, 0.0f, 0.0f);
+    vec3 cameraPos = Vec3(107.0f, 670.0f, -26.0f);
+    vec3 cameraTarget = Vec3(107.0f, 670.0f, 0.0f);
     vec3 cameraUp = Vec3(0.0f, 1.0f, 0.0f);
 
     // view matrix
@@ -104,10 +104,16 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1}, -1};
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
-    gameState->entities[3] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 3, 5 };
-    gameState->entities[4] = { {0, 0, 1.001f }, {0, 0, 0}, {4320, 2160, 1}, 4, 5 };
+    gameState->entities[3] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
+    gameState->entities[4] = { {0, 0, 1.001f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 5 };
 
-    gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 6, 7 };
+    gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
+
+    gameState->unit[0] = { {2269, 405}, 0, 1 };
+    gameState->unit[1] = { {2271, 406}, 1, 3 };
+    gameState->unit[2] = { {2267, 405}, 1, 4 };
+    gameState->unit[3] = { {2269, 409}, 1, 0 };
+    gameState->unit[4] = { {2265, 401}, 0, 2 };
 
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
@@ -118,10 +124,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     LoadImageFromDisk("../test_assets/tileset.png", &(gameState->tileset_img));
 
     LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->unit_img));
-    LoadImageFromDisk("../test_assets/unit_anim_1.png", &(gameState->unit_tileset_1_img));
-    LoadImageFromDisk("../test_assets/unit_anim_2.png", &(gameState->unit_tileset_2_img));
-    LoadImageFromDisk("../test_assets/unit_anim_3.png", &(gameState->unit_tileset_3_img));
-    LoadImageFromDisk("../test_assets/unit_anim_4.png", &(gameState->unit_tileset_4_img));
+    LoadImageFromDisk("../test_assets/horseman.png", &(gameState->unit_horseman_img));
+    LoadImageFromDisk("../test_assets/archer.png", &(gameState->unit_archer_img));
 
     ProcGen();
 
@@ -138,6 +142,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
 
   UpdateCamera(&gameState->camera, input, gameState);
 
+  /*
   gameState->entities[0].pos.y += gameState->entities[0].vel.y;
   if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))
   {
@@ -154,9 +159,13 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
   if ((gameState->entities[2].pos.z < -1) || (gameState->entities[2].pos.z > 1))
   {
     gameState->entities[2].vel.z *= -1;
-  }
+  }*/
 
-  gameState->entities[5].sprite_layer = gameState->anim_counter + UNIT_ANIM_OFFSET;
+  for (i32 i = 0; i < NUM_UNITS; i++)
+  {
+    gameState->unit_img.data[(int)(4 * gameState->unit[i].pos.x + gameState->unit[i].pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
+    gameState->unit_img.data[(int)(4 * gameState->unit[i].pos.x + gameState->unit[i].pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
+  }
 
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
   gameState->camera.view = LookAtMat(gameState->camera.pos, gameState->camera.target, gameState->camera.up);

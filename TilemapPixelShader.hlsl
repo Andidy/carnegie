@@ -7,9 +7,13 @@ struct VS_OUTPUT
 	float4 pos : SV_POSITION;
 	float4 color : COLOR;
 	float2 texcoord : TEXCOORD;
-	int map_index : MAP_INDEX;
-	int tileset_index : TILESET_INDEX;
+	int is_animated : IS_ANIMATED;
+	int layer_index : LAYER_INDEX;
+	int spritesheet_offset : SPRITESHEET_OFFSET;
+	int anim_frame : ANIM_FRAME;
 };
+
+
 
 float4 main(VS_OUTPUT input) : SV_TARGET
 {
@@ -23,18 +27,31 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 	
 	const float E = 0.00001;
 	float2 f_tilemap_coord = min(input.texcoord * f_tilemap_dim, f_tilemap_dim - E);
-	int2 tilemap_coord = int2(f_tilemap_coord);
+	float2 tilemap_coord = float2(int2(f_tilemap_coord));
 	float2 tileset_uv = frac(f_tilemap_coord);
 
-	//tilemap_coord.x = tilemap_coord.x + 0.5;
-	//tilemap_coord.y = tilemap_coord.y + 0.5;
-	int tile_index = int(255.0 * tex[input.map_index].Sample(pix, tilemap_coord / f_tilemap_dim).r);
+	tilemap_coord.x = tilemap_coord.x + 0.5;
+	tilemap_coord.y = tilemap_coord.y + 0.5;
+	int4 tile_data = int4(255.0 * tex[input.layer_index].Sample(pix, tilemap_coord / f_tilemap_dim).rgba);
 
-	int2 tileset_offset = int2(tile_index % tileset_dim.x, tile_index / tileset_dim.y);
+	int unit_spritesheet_index = tile_data.r + input.spritesheet_offset;
+	int anim_base_index = tile_data.g;
 
-	tileset_uv = (tileset_uv + float2(tileset_offset)) / f_tileset_dim;
+	int2 index_into_spritesheet; // = int2(input.anim_frame, anim_base_index);
 
-	float4 col = tex[input.tileset_index].Sample(pix, tileset_uv).rgba;
+	if (input.is_animated == 1) 
+	{
+		index_into_spritesheet = int2(input.anim_frame, anim_base_index);
+	}
+	else 
+	{
+		index_into_spritesheet = int2(anim_base_index % tileset_dim.x, anim_base_index / tileset_dim.y);
+	}
+
+	// tileset_uv.x += 0.5;
+	tileset_uv = (tileset_uv + float2(index_into_spritesheet)) / f_tileset_dim;
+
+	float4 col = tex[unit_spritesheet_index].Sample(pix, tileset_uv).rgba;
 	
 	if (col.a < 0.9) discard;
 
