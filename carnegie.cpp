@@ -142,6 +142,13 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
 
   UpdateCamera(&gameState->camera, input, gameState);
 
+  if (keyReleased(input->keyboard.a))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.x -= 1.0f;
+    gameState->unit[0].pos = pos;
+  }
+
   /*
   gameState->entities[0].pos.y += gameState->entities[0].vel.y;
   if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))

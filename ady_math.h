@@ -43,6 +43,11 @@ inline ivec2 IVec2(i32 x, i32 y)
   return { x, y };
 }
 
+inline i32 Vec2To1DIndex(vec2 v, i32 width)
+{
+  return v.x + v.y * width;
+}
+
 // Vector 3 ----------------------------------------------------------------
 
 typedef struct vec3
