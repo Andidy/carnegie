@@ -141,12 +141,41 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
   }
 
   UpdateCamera(&gameState->camera, input, gameState);
+  
+  ImageData* img = &(gameState->unit_img);
+  for (i32 i = 0; i < img->size; i += 4)
+  {
+    img->data[i + 1] = (uchar)50;
+    img->data[i + 2] = (uchar)0;
+  }
 
   if (keyReleased(input->keyboard.a))
   {
     vec2 pos = gameState->unit[0].pos;
     pos.x -= 1.0f;
     gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 2;
+  }
+  if (keyReleased(input->keyboard.d))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.x += 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 3;
+  }
+  if (keyReleased(input->keyboard.s))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.y += 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 4;
+  }
+  if (keyReleased(input->keyboard.w))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.y -= 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 5;
   }
 
   /*
@@ -170,8 +199,32 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
 
   for (i32 i = 0; i < NUM_UNITS; i++)
   {
-    gameState->unit_img.data[(int)(4 * gameState->unit[i].pos.x + gameState->unit[i].pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
-    gameState->unit_img.data[(int)(4 * gameState->unit[i].pos.x + gameState->unit[i].pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
+    vec2 pos = gameState->unit[i].pos;
+    vec2 dest = gameState->unit[i].pos;
+
+    gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
+    gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
+
+    i32 anim = gameState->unit[i].animation;
+    if (anim == 2)
+    {
+      dest.x += 1.0f;
+    }
+    if (anim == 3)
+    {
+      dest.x -= 1.0f;
+    }
+    if (anim == 4)
+    {
+      dest.y -= 1.0f;
+    }
+    if (anim == 5)
+    {
+      dest.y += 1.0f;
+    }
+
+    gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
+    gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
   }
 
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
