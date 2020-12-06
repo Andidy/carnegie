@@ -77,6 +77,8 @@ struct game_State
   f32 anim_timer;
   i32 anim_counter;
 
+  b32 moved_unit;
+
   Unit unit[NUM_UNITS];
 
   ImageData unit_img;

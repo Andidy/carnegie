@@ -916,6 +916,7 @@ void Update(HWND window, game_Memory* gameMemory)
     cbPerObject.layer_index = gameState->entities[i].data_layer;
     cbPerObject.spritesheet_offset = gameState->entities[i].spritesheet_base;
     cbPerObject.anim_frame = gameState->anim_counter;
+    cbPerObject.anim_time = gameState->anim_timer;
     // cbPerObject.lerp_time = gameState->anim_timer;
     memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
      

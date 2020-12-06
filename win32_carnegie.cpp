@@ -54,6 +54,12 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wpar
 
 i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow)
 {
+  hr = SetThreadDescription(GetCurrentThread(), L"simulation_thread");
+  if (FAILED(hr))
+  {
+    // Call failed.
+  }
+  
   /* XINPUT Function Pointers to handle LIB/DLL Loading */
   win32_LoadXInput();
 
@@ -129,11 +135,12 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       GameUpdateAndPrepareRenderData(0, &gameMemory, newInput, NULL);
 
       /* Enable D3D12 Debug layers */
+      /*
       hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
       win32_CheckSucceeded(hr);
 
       debugController->EnableDebugLayer();
-
+      */
       // Init D3D12
       InitD3D(window, &gameMemory);
 
@@ -159,6 +166,9 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
         lasttimer = endtimer;
         lastcyclecount = endcyclecount;
+
+        INT pix_color = PIX_COLOR(255, 0, 0);
+        PIXBeginEvent(pix_color, "WIN32_LOOP");
 
         #pragma endregion
         
@@ -222,6 +232,8 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         game_Input* temp = newInput;
         newInput = oldInput;
         oldInput = temp;
+
+        PIXEndEvent();
       }
     }
   }

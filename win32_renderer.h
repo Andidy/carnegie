@@ -22,6 +22,7 @@ struct ConstantBufferPerObject
   i32 layer_index;
   i32 spritesheet_offset;
   i32 anim_frame;
+  f32 anim_time;
 };
 
 // Constant buffers must be 256-byte aligned which has to do with constant reads on the GPU.

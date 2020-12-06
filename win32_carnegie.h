@@ -1,11 +1,15 @@
 #ifndef WIN32_CARNEGIE_H
 #define WIN32_CARNEGIE_H
 
+#include <windows.h>
+#define USE_PIX
+#include "libs/pix/pix3.h"
+
 #include "ady_types.h"
 #include "carnegie.cpp"
 // ^^^^ Carnegie game and engine stuff
 
-#include <windows.h>
+
 #include <xinput.h>
 #include <dsound.h>
 // ^^^^ Windows specific stuff

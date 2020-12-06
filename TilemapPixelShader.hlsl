@@ -11,6 +11,7 @@ struct VS_OUTPUT
 	int layer_index : LAYER_INDEX;
 	int spritesheet_offset : SPRITESHEET_OFFSET;
 	int anim_frame : ANIM_FRAME;
+	float anim_time : ANIM_TIME;
 };
 
 
@@ -36,18 +37,52 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 
 	int unit_spritesheet_index = tile_data.r + input.spritesheet_offset;
 	int anim_base_index = tile_data.g;
-
-	int2 index_into_spritesheet; // = int2(input.anim_frame, anim_base_index);
-
+	int discard_sector = tile_data.b;
+	
+	int2 index_into_spritesheet;
+	
 	if (input.is_animated == 1) 
 	{
 		index_into_spritesheet = int2(input.anim_frame, anim_base_index);
+		
+		if (discard_sector == 1)
+		{
+			if (tileset_uv.y > 0.5)
+			{
+				discard;
+			}
+			tileset_uv.y += 0.5;
+		}
+		if (discard_sector == 2)
+		{
+			if (tileset_uv.y < 0.5)
+			{
+				discard;
+			}
+			tileset_uv.y -= 0.5;
+		}
+		if (discard_sector == 3)
+		{
+			if (tileset_uv.x < 0.5)
+			{
+				discard;
+			}
+			tileset_uv.x -= 0.5;
+		}
+		if (discard_sector == 4)
+		{
+			if (tileset_uv.x > 0.5)
+			{
+				discard;
+			}
+			tileset_uv.x += 0.5;
+		}
 	}
-	else 
+	else
 	{
 		index_into_spritesheet = int2(anim_base_index % tileset_dim.x, anim_base_index / tileset_dim.y);
 	}
-
+	
 	// tileset_uv.x += 0.5;
 	tileset_uv = (tileset_uv + float2(index_into_spritesheet)) / f_tileset_dim;
 

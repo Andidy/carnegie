@@ -79,7 +79,7 @@ void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
 internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, game_Input* input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
-  
+
   // Probably want to change this to being its own function call
   if (!gameMemory->isInitialized)
   {
@@ -87,7 +87,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->dt = dt;
     gameState->anim_timer = 0.0f;
     gameState->toneHertz = 256;
-    
+    gameState->moved_unit = 0;
     // build proj and view matrix
     mat4 projmat = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
 
@@ -99,9 +99,9 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     // view matrix
     mat4 viewmat = LookAtMat(cameraPos, cameraTarget, cameraUp);
 
-    gameState->camera = {cameraPos, cameraTarget, cameraUp, projmat, viewmat};
-    
-    gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1}, -1};
+    gameState->camera = { cameraPos, cameraTarget, cameraUp, projmat, viewmat };
+
+    gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1}, -1 };
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
     gameState->entities[3] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
@@ -110,9 +110,9 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
 
     gameState->unit[0] = { {2269, 405}, 0, 1 };
-    gameState->unit[1] = { {2271, 406}, 1, 3 };
+    gameState->unit[1] = { {2271, 406}, 0, 3 };
     gameState->unit[2] = { {2267, 405}, 1, 4 };
-    gameState->unit[3] = { {2269, 409}, 1, 0 };
+    gameState->unit[3] = { {2269, 409}, 0, 0 };
     gameState->unit[4] = { {2265, 401}, 0, 2 };
 
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
@@ -140,13 +140,24 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->anim_timer = 0.0f;
   }
 
+  INT color = PIX_COLOR(0, 0, 255);
+  PIXBeginEvent(color, "USER INPUT");
   UpdateCamera(&gameState->camera, input, gameState);
-  
-  ImageData* img = &(gameState->unit_img);
-  for (i32 i = 0; i < img->size; i += 4)
+
+  if (gameState->moved_unit)
   {
-    img->data[i + 1] = (uchar)50;
-    img->data[i + 2] = (uchar)0;
+    gameState->moved_unit = 0;
+    color = PIX_COLOR(0, 255, 255);
+    PIXBeginEvent(color, "CLEAR UNIT DATA");
+
+    uchar* data = gameState->unit_img.data;
+    for (i32 i = 0; i < gameState->unit_img.size; i += 4)
+    {
+      data[i + 1] = (uchar)50;
+      data[i + 2] = (uchar)0;
+    }
+
+    PIXEndEvent();
   }
 
   if (keyReleased(input->keyboard.a))
@@ -155,6 +166,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     pos.x -= 1.0f;
     gameState->unit[0].pos = pos;
     gameState->unit[0].animation = 2;
+    gameState->moved_unit = 1;
   }
   if (keyReleased(input->keyboard.d))
   {
@@ -162,6 +174,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     pos.x += 1.0f;
     gameState->unit[0].pos = pos;
     gameState->unit[0].animation = 3;
+    gameState->moved_unit = 1;
   }
   if (keyReleased(input->keyboard.s))
   {
@@ -169,6 +182,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     pos.y += 1.0f;
     gameState->unit[0].pos = pos;
     gameState->unit[0].animation = 4;
+    gameState->moved_unit = 1;
   }
   if (keyReleased(input->keyboard.w))
   {
@@ -176,8 +190,11 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     pos.y -= 1.0f;
     gameState->unit[0].pos = pos;
     gameState->unit[0].animation = 5;
+    gameState->moved_unit = 1;
   }
-
+  
+  PIXEndEvent();
+  
   /*
   gameState->entities[0].pos.y += gameState->entities[0].vel.y;
   if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))
@@ -206,21 +223,34 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
 
     i32 anim = gameState->unit[i].animation;
-    if (anim == 2)
+    if (anim == 0 || anim == 1) // stationary
+    {
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
+    }
+    if (anim == 2) // right
     {
       dest.x += 1.0f;
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
     }
-    if (anim == 3)
+    if (anim == 3) // left
     {
       dest.x -= 1.0f;
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
     }
-    if (anim == 4)
+    if (anim == 4) // down
     {
       dest.y -= 1.0f;
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
     }
-    if (anim == 5)
+    if (anim == 5) // up
     {
       dest.y += 1.0f;
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
     }
 
     gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;

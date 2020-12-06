@@ -267,24 +267,24 @@ inline mat4 ScaleMat(vec3 v)
 }
 
 
-inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 near, f32 far)
+inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 znear, f32 zfar)
 {
   mat4 result = {0};
   
   result.data[0][0] = 2.0f / (right - left);
   result.data[1][1] = 2.0f / (top - bot);
-  result.data[2][2] = 2.0f / (near - far);
+  result.data[2][2] = 2.0f / (znear - zfar);
   result.data[3][3] = 1.0f;
   
   result.data[3][0] = (left + right) / (left - right);
   result.data[3][1] = (bot + top) / (bot - top);
-  result.data[3][2] = (far + near) / (near - far);
+  result.data[3][2] = (zfar + znear) / (znear - zfar);
   
   return (result);
 }
 
 // Note: fov asks for an angle in degrees
-inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 near, f32 far)
+inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 znear, f32 zfar)
 {
   mat4 result = {0};
   
@@ -292,8 +292,8 @@ inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 near, f32 far)
   
   result.data[0][0] = cotan / aspect_ratio;
   result.data[1][1] = cotan;
-  result.data[2][2] = (far) / (far - near);
-  result.data[3][2] = -(near * far) / (far - near);
+  result.data[2][2] = (zfar) / (zfar - znear);
+  result.data[3][2] = -(znear * zfar) / (zfar - znear);
   result.data[2][3] = 1.0f;
   result.data[3][3] = 0.0f;
   
