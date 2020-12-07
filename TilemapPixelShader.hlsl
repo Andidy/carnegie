@@ -44,38 +44,73 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 	if (input.is_animated == 1) 
 	{
 		index_into_spritesheet = int2(input.anim_frame, anim_base_index);
-		
-		if (discard_sector == 1)
+
+		float dest_time = 1 - input.anim_time;
+		float src_time = input.anim_time;
+
+		if (discard_sector == 1) // up dest
 		{
-			if (tileset_uv.y > 0.5)
+			if (tileset_uv.y > src_time)
 			{
 				discard;
 			}
-			tileset_uv.y += 0.5;
+			tileset_uv.y += dest_time;
 		}
-		if (discard_sector == 2)
+		if (discard_sector == 2) // up src
 		{
-			if (tileset_uv.y < 0.5)
+			if (tileset_uv.y < src_time)
 			{
 				discard;
 			}
-			tileset_uv.y -= 0.5;
+			tileset_uv.y -= src_time;
 		}
-		if (discard_sector == 3)
+		if (discard_sector == 3) // right dest
 		{
-			if (tileset_uv.x < 0.5)
+			if (tileset_uv.x < dest_time)
 			{
 				discard;
 			}
-			tileset_uv.x -= 0.5;
+			tileset_uv.x -= dest_time;
 		}
-		if (discard_sector == 4)
+		if (discard_sector == 4) // right src
 		{
-			if (tileset_uv.x > 0.5)
+			if (tileset_uv.x > dest_time)
 			{
 				discard;
 			}
-			tileset_uv.x += 0.5;
+			tileset_uv.x += src_time;
+		}
+		if (discard_sector == 5) // down src
+		{
+			if (tileset_uv.y > dest_time)
+			{
+				discard;
+			}
+			tileset_uv.y += src_time;
+		}
+		if (discard_sector == 6) // down dest
+		{
+			if (tileset_uv.y < dest_time)
+			{
+				discard;
+			}
+			tileset_uv.y -= dest_time;
+		}
+		if (discard_sector == 7) // left src
+		{
+			if (tileset_uv.x < src_time)
+			{
+				discard;
+			}
+			tileset_uv.x -= src_time;
+		}
+		if (discard_sector == 8) // left dest
+		{
+			if (tileset_uv.x > src_time)
+			{
+				discard;
+			}
+			tileset_uv.x += dest_time;
 		}
 	}
 	else

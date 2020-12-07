@@ -144,6 +144,39 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
   PIXBeginEvent(color, "USER INPUT");
   UpdateCamera(&gameState->camera, input, gameState);
 
+  if (keyReleased(input->keyboard.left))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.x -= 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 2;
+    gameState->moved_unit = 1;
+  }
+  if (keyReleased(input->keyboard.right))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.x += 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 3;
+    gameState->moved_unit = 1;
+  }
+  if (keyReleased(input->keyboard.down))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.y += 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 4;
+    gameState->moved_unit = 1;
+  }
+  if (keyReleased(input->keyboard.up))
+  {
+    vec2 pos = gameState->unit[0].pos;
+    pos.y -= 1.0f;
+    gameState->unit[0].pos = pos;
+    gameState->unit[0].animation = 5;
+    gameState->moved_unit = 1;
+  }
+  
   if (gameState->moved_unit)
   {
     gameState->moved_unit = 0;
@@ -160,39 +193,6 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     PIXEndEvent();
   }
 
-  if (keyReleased(input->keyboard.a))
-  {
-    vec2 pos = gameState->unit[0].pos;
-    pos.x -= 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 2;
-    gameState->moved_unit = 1;
-  }
-  if (keyReleased(input->keyboard.d))
-  {
-    vec2 pos = gameState->unit[0].pos;
-    pos.x += 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 3;
-    gameState->moved_unit = 1;
-  }
-  if (keyReleased(input->keyboard.s))
-  {
-    vec2 pos = gameState->unit[0].pos;
-    pos.y += 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 4;
-    gameState->moved_unit = 1;
-  }
-  if (keyReleased(input->keyboard.w))
-  {
-    vec2 pos = gameState->unit[0].pos;
-    pos.y -= 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 5;
-    gameState->moved_unit = 1;
-  }
-  
   PIXEndEvent();
   
   /*
@@ -228,13 +228,13 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
       gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
     }
-    if (anim == 2) // right
+    if (anim == 2) // left
     {
       dest.x += 1.0f;
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)7;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)8;
     }
-    if (anim == 3) // left
+    if (anim == 3) // right
     {
       dest.x -= 1.0f;
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
@@ -243,8 +243,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     if (anim == 4) // down
     {
       dest.y -= 1.0f;
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
+      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)5;
+      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)6;
     }
     if (anim == 5) // up
     {

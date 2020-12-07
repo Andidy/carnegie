@@ -916,8 +916,8 @@ void Update(HWND window, game_Memory* gameMemory)
     cbPerObject.layer_index = gameState->entities[i].data_layer;
     cbPerObject.spritesheet_offset = gameState->entities[i].spritesheet_base;
     cbPerObject.anim_frame = gameState->anim_counter;
-    cbPerObject.anim_time = gameState->anim_timer;
-    // cbPerObject.lerp_time = gameState->anim_timer;
+    f32 anim_time = ((f32)(3 - gameState->anim_counter) / 4.0f);
+    cbPerObject.anim_time = anim_time;
     memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
      
     if (i == 5) // temporary for unit tilemap
