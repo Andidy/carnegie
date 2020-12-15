@@ -11,9 +11,23 @@ struct Entity
   i32 spritesheet_base;
 };
 
+enum Direction {
+  NONE,
+  WEST,
+  EAST,
+  SOUTH,
+  NORTH,
+  NUM_DIRECTIONS
+};
+
 struct Unit
 {
+  vec2 old_pos;
   vec2 pos;
+  vec2 new_pos;
+
+  Direction dir;
+
   i32 type;
   i32 animation;
 };

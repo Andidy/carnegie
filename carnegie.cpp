@@ -76,6 +76,43 @@ void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
   camera->view = LookAtMat(camera->pos, camera->target, camera->up);
 }
 
+void MarchUnit(Unit* unit, Direction dir, vec2 new_pos)
+{
+  unit->dir = dir;
+  unit->new_pos = new_pos;
+}
+
+void MoveUnit(Unit* unit)
+{
+  unit->old_pos = unit->pos;
+  unit->pos = unit->new_pos;
+
+  if (unit->dir == WEST)
+  {
+    unit->animation = 2;
+  }
+  else if (unit->dir == EAST)
+  {
+    unit->animation = 3;
+  }
+  else if (unit->dir == SOUTH)
+  {
+    unit->animation = 4;
+  }
+  else if (unit->dir == NORTH)
+  {
+    unit->animation = 5;
+  }
+}
+
+void CleanupUnit(Unit* unit)
+{
+  unit->old_pos = unit->pos;
+  unit->new_pos = unit->pos;
+  unit->animation = 0;
+  unit->dir = NONE;
+}
+
 internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, game_Input* input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
@@ -88,6 +125,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->anim_timer = 0.0f;
     gameState->toneHertz = 256;
     gameState->moved_unit = 0;
+    gameState->anim_reset = 0;
+
     // build proj and view matrix
     mat4 projmat = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
 
@@ -109,11 +148,11 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
 
     gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
 
-    gameState->unit[0] = { {2269, 405}, 0, 1 };
-    gameState->unit[1] = { {2271, 406}, 0, 3 };
-    gameState->unit[2] = { {2267, 405}, 1, 4 };
-    gameState->unit[3] = { {2269, 409}, 0, 0 };
-    gameState->unit[4] = { {2265, 401}, 0, 2 };
+    gameState->unit[0] = { {2269, 405}, {2269, 405}, {2269, 405}, NONE, 0, 0 };
+    gameState->unit[1] = { {2271, 406}, {2271, 406}, {2271, 406}, NONE, 0, 0 };
+    gameState->unit[2] = { {2267, 405}, {2267, 405}, {2267, 405}, NONE, 1, 0 };
+    gameState->unit[3] = { {2269, 409}, {2269, 409}, {2269, 409}, NONE, 0, 0 };
+    gameState->unit[4] = { {2265, 401}, {2265, 401}, {2265, 401}, NONE, 0, 0 };
 
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
@@ -132,12 +171,18 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     return;
   }
 
+  gameState->anim_reset = 0;
+
   gameState->dt = dt;
   gameState->anim_timer += dt;
   if (gameState->anim_timer > 250.0f)
   {
     gameState->anim_counter = (gameState->anim_counter + 1) % 4;
     gameState->anim_timer = 0.0f;
+    if (gameState->anim_counter == 0)
+    {
+      gameState->anim_reset = 1;
+    }
   }
 
   INT color = PIX_COLOR(0, 0, 255);
@@ -148,38 +193,34 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
   {
     vec2 pos = gameState->unit[0].pos;
     pos.x -= 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 2;
+    MarchUnit(&(gameState->unit[0]), WEST, pos);
     gameState->moved_unit = 1;
   }
   if (keyReleased(input->keyboard.right))
   {
     vec2 pos = gameState->unit[0].pos;
     pos.x += 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 3;
+    MarchUnit(&(gameState->unit[0]), EAST, pos);
     gameState->moved_unit = 1;
   }
   if (keyReleased(input->keyboard.down))
   {
     vec2 pos = gameState->unit[0].pos;
     pos.y += 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 4;
+    MarchUnit(&(gameState->unit[0]), SOUTH, pos);
     gameState->moved_unit = 1;
   }
   if (keyReleased(input->keyboard.up))
   {
     vec2 pos = gameState->unit[0].pos;
     pos.y -= 1.0f;
-    gameState->unit[0].pos = pos;
-    gameState->unit[0].animation = 5;
+    MarchUnit(&(gameState->unit[0]), NORTH, pos);
     gameState->moved_unit = 1;
   }
   
-  if (gameState->moved_unit)
+  if (gameState->anim_reset)
   {
-    gameState->moved_unit = 0;
+    //gameState->moved_unit = 0;
     color = PIX_COLOR(0, 255, 255);
     PIXBeginEvent(color, "CLEAR UNIT DATA");
 
@@ -216,8 +257,20 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
 
   for (i32 i = 0; i < NUM_UNITS; i++)
   {
+    if (gameState->anim_reset)
+    {
+      if (gameState->unit[i].animation != 0)
+      {
+        CleanupUnit(&(gameState->unit[i]));
+      }
+      else if (gameState->unit[i].dir != NONE)
+      {
+        MoveUnit(&(gameState->unit[i]));
+      }
+    }
+    
     vec2 pos = gameState->unit[i].pos;
-    vec2 dest = gameState->unit[i].pos;
+    vec2 old_pos = gameState->unit[i].old_pos;
 
     gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
     gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
@@ -226,35 +279,31 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     if (anim == 0 || anim == 1) // stationary
     {
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
+      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
     }
     if (anim == 2) // left
     {
-      dest.x += 1.0f;
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)7;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)8;
+      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)8;
     }
     if (anim == 3) // right
     {
-      dest.x -= 1.0f;
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
+      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
     }
     if (anim == 4) // down
     {
-      dest.y -= 1.0f;
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)5;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)6;
+      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)6;
     }
     if (anim == 5) // up
     {
-      dest.y += 1.0f;
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
-      gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
+      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
     }
 
-    gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
-    gameState->unit_img.data[(int)(4 * dest.x + dest.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
+    gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
+    gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
   }
 
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
