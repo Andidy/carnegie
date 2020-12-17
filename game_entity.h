@@ -8,7 +8,7 @@ struct Entity
 
   i32 is_animated;
   i32 data_layer;
-  i32 spritesheet_base;
+  i32 tileset_base_index;
 };
 
 enum Direction {

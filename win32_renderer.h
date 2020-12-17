@@ -20,7 +20,7 @@ struct ConstantBufferPerObject
   mat4 mvp;
   i32 is_animated;
   i32 layer_index;
-  i32 spritesheet_offset;
+  i32 tileset_base_index;
   i32 anim_frame;
   f32 anim_time;
 };

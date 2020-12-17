@@ -9,7 +9,7 @@ struct VS_OUTPUT
 	float2 texcoord : TEXCOORD;
 	int is_animated : IS_ANIMATED;
 	int layer_index : LAYER_INDEX;
-	int spritesheet_offset : SPRITESHEET_OFFSET;
+	int tileset_base_index : TILESET_BASE_INDEX;
 	int anim_frame : ANIM_FRAME;
 	float anim_time : ANIM_TIME;
 };
@@ -35,7 +35,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 	tilemap_coord.y = tilemap_coord.y + 0.5;
 	int4 tile_data = int4(255.0 * tex[input.layer_index].Sample(pix, tilemap_coord / f_tilemap_dim).rgba);
 
-	int unit_spritesheet_index = tile_data.r + input.spritesheet_offset;
+	int unit_spritesheet_index = tile_data.r + input.tileset_base_index;
 	int anim_base_index = tile_data.g;
 	int discard_sector = tile_data.b;
 	
@@ -118,7 +118,6 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 		index_into_spritesheet = int2(anim_base_index % tileset_dim.x, anim_base_index / tileset_dim.y);
 	}
 	
-	// tileset_uv.x += 0.5;
 	tileset_uv = (tileset_uv + float2(index_into_spritesheet)) / f_tileset_dim;
 
 	float4 col = tex[unit_spritesheet_index].Sample(pix, tileset_uv).rgba;

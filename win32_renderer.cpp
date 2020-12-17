@@ -914,10 +914,10 @@ void Update(HWND window, game_Memory* gameMemory)
     cbPerObject.mvp = mvp;
     cbPerObject.is_animated = gameState->entities[i].is_animated;
     cbPerObject.layer_index = gameState->entities[i].data_layer;
-    cbPerObject.spritesheet_offset = gameState->entities[i].spritesheet_base;
+    cbPerObject.tileset_base_index = gameState->entities[i].tileset_base_index;
     cbPerObject.anim_frame = gameState->anim_counter;
     // f32 anim_time = ((f32)(3 - gameState->anim_counter) / 4.0f);
-    f32 anim_time = 1.0f - (gameState->anim_timer + gameState->anim_counter * 250.0f) / 1000.0f;
+    f32 anim_time = 1.0f - (gameState->anim_timer + gameState->anim_counter * 125.0f) / 500.0f;
     cbPerObject.anim_time = anim_time;
     memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
      
