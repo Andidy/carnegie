@@ -30,7 +30,7 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
 {
-  f32 speed = 0.001f * gameState->dt;
+  f32 speed = 0.01f * gameState->dt;
 
   if (keyDown(input->keyboard.space))
   {
@@ -63,14 +63,20 @@ void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
 
   if (keyDown(input->keyboard.r))
   {
-    camera->pos.z += speed;
-    camera->target.z += speed;
+    camera->pos.z += sqrtf(0.02f * speed * (f32)fabs((double)camera->pos.z));
+    if (camera->pos.z > 0.0f)
+    {
+      camera->pos.z = -0.01f;
+    }
   }
 
   if (keyDown(input->keyboard.f))
   {
-    camera->pos.z -= speed;
-    camera->target.z -= speed;
+    camera->pos.z -= sqrtf(0.02f * speed * (f32)fabs((double)camera->pos.z));
+    if (camera->pos.z < -800.0f)
+    {
+      camera->pos.z = -800.0f;
+    }
   }
 
   camera->view = LookAtMat(camera->pos, camera->target, camera->up);
@@ -143,8 +149,9 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1}, -1 };
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
-    gameState->entities[3] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
-    gameState->entities[4] = { {0, 0, 1.001f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 5 };
+    
+    gameState->entities[3] = { {0, 0, 1.010f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
+    gameState->entities[4] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 5 };
 
     gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
 

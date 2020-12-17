@@ -229,6 +229,12 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
         Render(window, &gameMemory);
 
+        char dev_buffer[256];
+        game_State* gameState = (game_State*)((&gameMemory)->data);
+        vec3 pos = gameState->camera.pos;
+        sprintf_s(dev_buffer, "Camera Pos: %f, %f, %f\n", pos.x, pos.y, pos.z);
+        OutputDebugStringA(dev_buffer);
+
         game_Input* temp = newInput;
         newInput = oldInput;
         oldInput = temp;
