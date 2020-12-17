@@ -162,7 +162,17 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     LoadImageFromDisk("../test_assets/map2_data.png", &(gameState->map2_img));
     LoadImageFromDisk("../test_assets/tileset.png", &(gameState->tileset_img));
 
-    LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->unit_img));
+    LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->blank_unit_img));
+    ImageData* src = &(gameState->blank_unit_img);
+    ImageData* dest = &(gameState->unit_img);
+
+    dest->bytesPerRow = src->bytesPerRow;
+    dest->height = src->height;
+    dest->width = src->width;
+    dest->size = src->size;
+    dest->data = (uchar*)malloc(dest->size);
+    memcpy(dest->data, src->data, src->size);
+    
     LoadImageFromDisk("../test_assets/horseman.png", &(gameState->unit_horseman_img));
     LoadImageFromDisk("../test_assets/archer.png", &(gameState->unit_archer_img));
 
@@ -175,7 +185,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
 
   gameState->dt = dt;
   gameState->anim_timer += dt;
-  if (gameState->anim_timer > 250.0f)
+  if (gameState->anim_timer > 125.0f)
   {
     gameState->anim_counter = (gameState->anim_counter + 1) % 4;
     gameState->anim_timer = 0.0f;
@@ -223,13 +233,15 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     //gameState->moved_unit = 0;
     color = PIX_COLOR(0, 255, 255);
     PIXBeginEvent(color, "CLEAR UNIT DATA");
+    
+    ImageData* src = &(gameState->blank_unit_img);
+    ImageData* dest = &(gameState->unit_img);
 
-    uchar* data = gameState->unit_img.data;
-    for (i32 i = 0; i < gameState->unit_img.size; i += 4)
-    {
-      data[i + 1] = (uchar)50;
-      data[i + 2] = (uchar)0;
-    }
+    dest->bytesPerRow = src->bytesPerRow;
+    dest->height = src->height;
+    dest->width = src->width;
+    dest->size = src->size;
+    memcpy(dest->data, src->data, src->size);
 
     PIXEndEvent();
   }

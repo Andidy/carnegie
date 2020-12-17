@@ -82,6 +82,7 @@ struct game_State
 
   Unit unit[NUM_UNITS];
 
+  ImageData blank_unit_img;
   ImageData unit_img;
   ImageData unit_horseman_img;
   ImageData unit_archer_img;
