@@ -120,9 +120,9 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       u64 lastcyclecount = __rdtsc();
       
 
-      game_Input gameInput[2] = { 0 };
-      game_Input* newInput = &gameInput[0];
-      game_Input* oldInput = &gameInput[1];
+      Game::Input gameInput[2] = { 0 };
+      Game::Input* newInput = &gameInput[0];
+      Game::Input* oldInput = &gameInput[1];
 
       game_Memory gameMemory = { 0 };
       gameMemory.isInitialized = false;
@@ -176,7 +176,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         
         // Input
         *newInput = { 0 };
-        for (i32 i = 0; i < NUM_KEYBOARD_BUTTONS; i++)
+        for (i32 i = 0; i < Game::NUM_KEYBOARD_BUTTONS; i++)
         {
           newInput->keyboard.buttons[i].endedDown = oldInput->keyboard.buttons[i].endedDown;
         }
@@ -235,7 +235,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         sprintf_s(dev_buffer, "Camera Pos: %f, %f, %f\n", pos.x, pos.y, pos.z);
         OutputDebugStringA(dev_buffer);
 
-        game_Input* temp = newInput;
+        Game::Input* temp = newInput;
         newInput = oldInput;
         oldInput = temp;
 

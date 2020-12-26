@@ -342,18 +342,3 @@ void LoadTextureFromImage(ImageData* imageData, D3D12_RESOURCE_DESC* resourceDes
   resourceDescription->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN; // The arrangement of the pixels. Setting to unknown lets the driver choose the most efficient one
   resourceDescription->Flags = D3D12_RESOURCE_FLAG_NONE; // no flags
 }
-
-void LoadTextureArrayFromImage(ImageData* imageData, D3D12_RESOURCE_DESC* resourceDescription)
-{
-  resourceDescription->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-  resourceDescription->Alignment = 0;
-  resourceDescription->Width = imageData->width;
-  resourceDescription->Height = imageData->height;
-  resourceDescription->DepthOrArraySize = 256; // number of elements in the texture array
-  resourceDescription->MipLevels = 1;
-  resourceDescription->Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  resourceDescription->SampleDesc.Count = 1;
-  resourceDescription->SampleDesc.Quality = 0;
-  resourceDescription->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-  resourceDescription->Flags = D3D12_RESOURCE_FLAG_NONE;
-}

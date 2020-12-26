@@ -1,5 +1,5 @@
-/* -------------------- FILE I/O ------------------- */
-#pragma region File I/O
+#pragma once
+
 internal dev_ReadFileResult dev_ReadFile(char* filename)
 {
   dev_ReadFileResult result = { 0 };
@@ -47,15 +47,13 @@ internal b32 dev_WriteFile(char* filename, u32 memorySize, void* memory)
     DWORD bytesWritten;
     if (WriteFile(file, memory, memorySize, &bytesWritten, 0))
     {
-      result = bytesWritten == memorySize;
+      result = (bytesWritten == memorySize);
     }
     else
     {
-
+      // error
     }
     CloseHandle(file);
   }
   return result;
 }
-#pragma endregion
-/* -------------------- FILE I/O ------------------- */

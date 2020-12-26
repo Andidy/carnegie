@@ -9,7 +9,6 @@
 #include "carnegie.cpp"
 // ^^^^ Carnegie game and engine stuff
 
-
 #include <xinput.h>
 #include <dsound.h>
 // ^^^^ Windows specific stuff
@@ -26,34 +25,6 @@
 // ^^^^ C libs
 
 #include "win32_renderer_image_loading.cpp"
-
-/*
-
-  TODO: Finish Platform Layer
-  - [] Finish HMH Episodes
-
-  - [] File I/O
-    - [] SaveGame Locations
-    - [] Asset Loading System
-  - [] User Input
-    - [] Raw Input (supporting multiple keyboards)
-    - [] GetKeyboardLayout (International keyboards)
-  - [] Windowing Interactions
-    - [] Getting handle to own executable
-    - [] Clip Cursor (multimonitor support)
-    - [] WM_SetCursor (control cursor visibility)
-    - [] QueryCancelAutoplay
-    - [] WM_ACTIVATEAPP (for when the window isn't the focussed window)
-  - [] Rendering
-    - [] Sleep / Time begin period
-    - [] Blit speed improvements (BitBlt)
-    - [] Hardware Acceleration (DirectX12)
-  - [] Sound System
-    - [X] Fix hitching bug
-  - [] Multi-Threading
-  - more may be needed...
-
-*/
 
 global b32 win32_running;
 

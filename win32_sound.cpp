@@ -1,4 +1,4 @@
-/* ------------------ DIRECT SOUND ----------------- */
+#pragma once
 
 global LPDIRECTSOUNDBUFFER win32_SecondarySoundBuffer;
 
@@ -13,10 +13,6 @@ typedef struct win32_SoundStruct
   f32 tsin;
 } win32_SoundStruct;
 
-/* ------------------ DIRECT SOUND ----------------- */
-
-/* ------------------ DIRECT SOUND ----------------- */
-#pragma region DSound
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
@@ -159,5 +155,3 @@ internal void win32_ClearSoundBuffer(win32_SoundStruct* soundstruct)
     win32_SecondarySoundBuffer->Unlock(region1, r1size, region2, r2size);
   }
 }
-#pragma endregion
-/* ------------------ DIRECT SOUND ----------------- */

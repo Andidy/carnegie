@@ -1,5 +1,5 @@
-/* --------------------- XINPUT -------------------- */
-#pragma region XInput
+#pragma once
+
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
 #define X_INPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
 typedef X_INPUT_GET_STATE(x_input_get_state);
@@ -43,20 +43,20 @@ internal void win32_LoadXInput()
   }
 }
 
-internal void win32_ProcessXInputDigitalButton(game_ButtonState* oldstate, game_ButtonState* newstate, DWORD buttonBit, DWORD xinputButtonState)
+internal void win32_ProcessXInputDigitalButton(Game::ButtonState* oldstate, Game::ButtonState* newstate, DWORD buttonBit, DWORD xinputButtonState)
 {
   newstate->endedDown = ((xinputButtonState & buttonBit) == buttonBit);
   newstate->transitionCount = (oldstate->endedDown != newstate->endedDown) ? 1 : 0;
 }
 
-internal void win32_ProcessKeyboardMessage(game_ButtonState *newState, b32 isDown)
+internal void win32_ProcessKeyboardMessage(Game::ButtonState *newState, b32 isDown)
 {
   win32_Assert(newState->endedDown != isDown);
   newState->endedDown = isDown;
   newState->transitionCount += 1;
 }
 
-internal void win32_UpdateInput(game_Input* gameInput)
+internal void win32_UpdateInput(Game::Input* gameInput)
 {
   MSG message;
   while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -227,6 +227,3 @@ internal void win32_UpdateInput(game_Input* gameInput)
     }
   }
 }
-
-#pragma endregion
-/* --------------------- XINPUT -------------------- */
