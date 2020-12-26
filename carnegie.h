@@ -43,14 +43,15 @@ struct game_Memory
 };
 
 #include "game_platform_calls.h"
-#include "game_input.cpp"
+#include "game_input.h"
 
 #include "game_camera.h"
 #include "game_entity.h"
 
-#include "game_proc_gen.cpp"
+#include "game_proc_gen.h"
+#include "game_tileset_resolver.h"
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, game_Input* Input, game_SoundBuffer* soundBuffer);
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, Game::Input* Input, game_SoundBuffer* soundBuffer);
 
 /* Game Only */
 
@@ -73,6 +74,7 @@ struct game_State
   ImageData map_img;
   ImageData map2_img;
   ImageData tileset_img;
+  ImageData tileset2_img;
 
   f32 anim_timer;
   i32 anim_counter;

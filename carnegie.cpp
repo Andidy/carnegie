@@ -28,7 +28,7 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 
 
-void UpdateCamera(Camera* camera, game_Input* input, game_State* gameState)
+void UpdateCamera(Camera* camera, Game::Input* input, game_State* gameState)
 {
   f32 speed = 0.01f * gameState->dt;
 
@@ -119,7 +119,7 @@ void CleanupUnit(Unit* unit)
   unit->dir = NONE;
 }
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, game_Input* input, game_SoundBuffer* soundBuffer)
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Game::Input* input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
 
@@ -150,8 +150,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
     
-    gameState->entities[3] = { {0, 0, 1.010f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
-    gameState->entities[4] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 5 };
+    gameState->entities[3] = { {0, 0, 1.005f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
+    gameState->entities[4] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 9 };
 
     gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
 
@@ -168,8 +168,10 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     LoadImageFromDisk("../test_assets/map_data.png", &(gameState->map_img));
     LoadImageFromDisk("../test_assets/map2_data.png", &(gameState->map2_img));
     LoadImageFromDisk("../test_assets/tileset.png", &(gameState->tileset_img));
+    LoadImageFromDisk("../test_assets/tiled_tileset_test.png", &(gameState->tileset2_img));
 
     LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->blank_unit_img));
+    
     ImageData* src = &(gameState->blank_unit_img);
     ImageData* dest = &(gameState->unit_img);
 
@@ -183,7 +185,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, ga
     LoadImageFromDisk("../test_assets/horseman.png", &(gameState->unit_horseman_img));
     LoadImageFromDisk("../test_assets/archer.png", &(gameState->unit_archer_img));
 
-    ProcGen();
+    Game::ProcGen();
+    ResolveTileset(&(gameState->map2_img));
 
     return;
   }

@@ -109,6 +109,7 @@ Texture bird_tex;
 Texture map_tex;
 Texture map2_tex;
 Texture tileset_tex;
+Texture tileset2_tex;
 
 Texture unit_tex;
 Texture horseman_anim;

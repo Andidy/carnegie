@@ -346,7 +346,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   // this is a range of descriptors inside a descriptor heap
   D3D12_DESCRIPTOR_RANGE tilemapDescTblRanges[1];
   tilemapDescTblRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-  tilemapDescTblRanges[0].NumDescriptors = 9;
+  tilemapDescTblRanges[0].NumDescriptors = 10;
   tilemapDescTblRanges[0].BaseShaderRegister = 0;
   tilemapDescTblRanges[0].RegisterSpace = 0;
   tilemapDescTblRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -805,7 +805,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 9;
+  heapDesc.NumDescriptors = 10;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
@@ -839,6 +839,9 @@ void InitD3D(HWND window, game_Memory* gameMemory)
     &horseman_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
   UploadTextureFromImage(&(gameState->unit_archer_img), 8, &archer_anim.textureBuffer,
     &archer_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+
+  UploadTextureFromImage(&(gameState->tileset2_img), 9, &tileset2_tex.textureBuffer,
+    &tileset2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
