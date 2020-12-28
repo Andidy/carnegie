@@ -45,7 +45,6 @@ struct game_Memory
 #include "game_platform_calls.h"
 #include "game_input.h"
 
-#include "game_camera.h"
 #include "game_entity.h"
 
 #include "game_proc_gen.h"
