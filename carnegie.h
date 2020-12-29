@@ -47,7 +47,6 @@ struct game_Memory
 
 #include "game_entity.h"
 
-#include "game_proc_gen.h"
 #include "game_tileset_resolver.h"
 
 internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, Game::Input* Input, game_SoundBuffer* soundBuffer);

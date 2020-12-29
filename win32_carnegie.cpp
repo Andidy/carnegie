@@ -60,15 +60,13 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
     // Call failed.
   }
   
-  /* XINPUT Function Pointers to handle LIB/DLL Loading */
+  // XINPUT Function Pointers to handle LIB/DLL Loading
   win32_LoadXInput();
 
   // Timing Info
-  
   LARGE_INTEGER perftimerfreqresult;
   QueryPerformanceFrequency(&perftimerfreqresult);
   i64 perftimerfreq = perftimerfreqresult.QuadPart;
-  
 
   window_width = 1200;
   window_height = 900;
@@ -114,11 +112,9 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       // Configs and Tickers
       win32_running = true;
 
-      
       LARGE_INTEGER lasttimer;
       QueryPerformanceCounter(&lasttimer);
       u64 lastcyclecount = __rdtsc();
-      
 
       Game::Input gameInput[2] = { 0 };
       Game::Input* newInput = &gameInput[0];
@@ -134,14 +130,11 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       // Probably want to change this to being its own function call
       GameUpdateAndPrepareRenderData(0, &gameMemory, newInput, NULL);
 
-      /* Enable D3D12 Debug layers */
-      /*
+      // Direct3D
       hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
       win32_CheckSucceeded(hr);
 
       debugController->EnableDebugLayer();
-      */
-      // Init D3D12
       InitD3D(window, &gameMemory);
 
 

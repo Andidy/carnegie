@@ -19,7 +19,6 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
     tsin += 2.0f * PI * (1.0f / (f32)wavePeriod);
   }
 }
-/* --------------- SOUND --------------- */
 
 
 
@@ -185,7 +184,6 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Ga
     LoadImageFromDisk("../test_assets/horseman.png", &(gameState->unit_horseman_img));
     LoadImageFromDisk("../test_assets/archer.png", &(gameState->unit_archer_img));
 
-    Game::ProcGen();
     ResolveTileset(&(gameState->map2_img));
 
     return;
