@@ -7,7 +7,7 @@ cl -WX -W4 -wd4100 -wd4201 ^
  -wd4238 ^
  -Oi -GR -EHa- -EHsc ^
  -MT -Gm- ^
- -Zi ..\win32_carnegie.cpp ^
+ -Zi ..\src\win32_base.cpp ^
  user32.lib ole32.lib gdi32.lib ^
  Xinput.lib d3d12.lib dxgi.lib ^
  dxguid.lib d3dcompiler.lib ^
@@ -19,7 +19,7 @@ REM  -wd4238 ^
 REM  -Oi -GR -EHa- -EHsc ^
 REM  -O2 -MT -Gm- ^
 REM  -Fecarnegie.exe ^
-REM  ..\win32_carnegie.cpp ^
+REM  ..\src\win32_base.cpp ^
 REM  user32.lib ole32.lib gdi32.lib ^
 REM  Xinput.lib d3d12.lib dxgi.lib ^
 REM  dxguid.lib d3dcompiler.lib ^

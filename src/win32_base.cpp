@@ -1,4 +1,4 @@
-#include "win32_carnegie.h"
+#include "win32_base.h"
 
 u32 counter = 0;
 
@@ -38,10 +38,7 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wpar
       win32_Assert("Keyboard event in windows callback function");
     } break;
 
-    /*case WM_PAINT:
-    {
-      
-    } break;*/
+    // case WM_PAINT: {} break;
 
     default:
     {

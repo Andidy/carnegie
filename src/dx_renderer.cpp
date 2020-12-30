@@ -1,4 +1,4 @@
-#include "win32_renderer.h"
+#include "dx_renderer.h"
 
 ID3D12Debug* debugController;
 
@@ -816,32 +816,15 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   game_State* gameState = (game_State*)gameMemory->data;
   
   UploadTextureFromImage(&(gameState->cat_img), 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->dog_img), 1, &dog_tex.textureBuffer,
-    &dog_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->bird_img), 2, &bird_tex.textureBuffer,
-    &bird_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->map_img), 3, &map_tex.textureBuffer,
-    &map_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->map2_img), 4, &map2_tex.textureBuffer,
-    &map2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->tileset_img), 5, &tileset_tex.textureBuffer,
-    &tileset_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->unit_img), 6, &unit_tex.textureBuffer,
-    &unit_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->unit_horseman_img), 7, &horseman_anim.textureBuffer,
-    &horseman_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-  UploadTextureFromImage(&(gameState->unit_archer_img), 8, &archer_anim.textureBuffer,
-    &archer_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
-
-  UploadTextureFromImage(&(gameState->tileset2_img), 9, &tileset2_tex.textureBuffer,
-    &tileset2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->dog_img), 1, &dog_tex.textureBuffer, &dog_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->bird_img), 2, &bird_tex.textureBuffer, &bird_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->map_img), 3, &map_tex.textureBuffer, &map_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->map2_img), 4, &map2_tex.textureBuffer, &map2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->tileset_img), 5, &tileset_tex.textureBuffer, &tileset_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_img), 6, &unit_tex.textureBuffer, &unit_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_horseman_img), 7, &horseman_anim.textureBuffer, &horseman_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->unit_archer_img), 8, &archer_anim.textureBuffer, &archer_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->tileset2_img), 9, &tileset2_tex.textureBuffer, &tileset2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();

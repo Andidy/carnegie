@@ -1,4 +1,4 @@
-#include "carnegie.h"
+#include "game_carnegie.h"
 
 /* --------------- SOUND --------------- */
 #define PI 3.14159265359f

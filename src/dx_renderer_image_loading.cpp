@@ -6,7 +6,7 @@ can be replaced later
 
 */
 
-#include "win32_renderer.h"
+#include "dx_renderer.h"
 #include <wincodec.h>
 #include <stdlib.h>
 
