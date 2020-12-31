@@ -49,8 +49,6 @@ global HRESULT hr;
 #include "win32_fileio.cpp"
 #include "win32_sound.cpp"
 
-u32 counter = 0;
-
 LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
 {
   LRESULT result = 0;
@@ -189,7 +187,6 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       while(win32_running)
       {
         #pragma region timing
-
         LARGE_INTEGER endtimer;
         QueryPerformanceCounter(&endtimer);
         i64 timerelapsed = endtimer.QuadPart - lasttimer.QuadPart;
@@ -208,10 +205,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
         INT pix_color = PIX_COLOR(255, 0, 0);
         PIXBeginEvent(pix_color, "WIN32_LOOP");
-
         #pragma endregion
-        
-        ++counter;
         
         // Input
         *newInput = { 0 };
@@ -231,7 +225,6 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         if (SUCCEEDED(win32_SecondarySoundBuffer->GetCurrentPosition(&playCursor, &writeCursor)))
         {
           byteToLock = (soundstruct.runningSampleIndex * soundstruct.bytesPerSample) % soundstruct.secondaryBufferSize;
-
           targetCursor = ((playCursor + (soundstruct.latencySampleCount * soundstruct.bytesPerSample)) % soundstruct.secondaryBufferSize);
 
           if (byteToLock > targetCursor)
@@ -243,7 +236,6 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
           {
             bytesToWrite = targetCursor - byteToLock;
           }
-
           soundIsValid = true;
         }
 

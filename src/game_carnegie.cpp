@@ -42,7 +42,6 @@ struct game_Memory
 #include "game_platform_calls.h"
 
 #include "game_entity.h"
-
 #include "game_tileset_resolver.h"
 
 internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, Input* Input, game_SoundBuffer* soundBuffer);
@@ -61,14 +60,14 @@ struct game_State
   Camera camera;
   Entity entities[NUM_ENTITIES];
 
-  ImageData cat_img;
-  ImageData dog_img;
-  ImageData bird_img;
+  Image cat_img;
+  Image dog_img;
+  Image bird_img;
 
-  ImageData map_img;
-  ImageData map2_img;
-  ImageData tileset_img;
-  ImageData tileset2_img;
+  Image map_img;
+  Image map2_img;
+  Image tileset_img;
+  Image tileset2_img;
 
   f32 anim_timer;
   i32 anim_counter;
@@ -78,10 +77,10 @@ struct game_State
 
   Unit unit[NUM_UNITS];
 
-  ImageData blank_unit_img;
-  ImageData unit_img;
-  ImageData unit_horseman_img;
-  ImageData unit_archer_img;
+  Image blank_unit_img;
+  Image unit_img;
+  Image unit_horseman_img;
+  Image unit_archer_img;
 };
 
 // Data
@@ -95,7 +94,6 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
   local f32 tsin;
   i16 toneVolume = 100;
   i32 wavePeriod = soundBuffer->samplesPerSecond / toneHertz;
-  const f32 PI = 3.14159265359f;
 
   i16 *sampleOut = soundBuffer->samples;
   for (i32 sample_index = 0; sample_index < soundBuffer->sampleCount; sample_index++)
@@ -255,8 +253,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
 
     LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->blank_unit_img));
     
-    ImageData* src = &(gameState->blank_unit_img);
-    ImageData* dest = &(gameState->unit_img);
+    Image* src = &(gameState->blank_unit_img);
+    Image* dest = &(gameState->unit_img);
 
     dest->bytesPerRow = src->bytesPerRow;
     dest->height = src->height;
@@ -326,8 +324,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
     color = PIX_COLOR(0, 255, 255);
     PIXBeginEvent(color, "CLEAR UNIT DATA");
     
-    ImageData* src = &(gameState->blank_unit_img);
-    ImageData* dest = &(gameState->unit_img);
+    Image* src = &(gameState->blank_unit_img);
+    Image* dest = &(gameState->unit_img);
 
     dest->bytesPerRow = src->bytesPerRow;
     dest->height = src->height;

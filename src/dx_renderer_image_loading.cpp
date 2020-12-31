@@ -1,11 +1,3 @@
-/*
-
-This file is here because at some point I probably do not want to rely on wincodec.h
-or Windows Imaging Component, so the functionality of this file is abstracted so it
-can be replaced later
-
-*/
-
 #include "dx_renderer.h"
 #include <wincodec.h>
 #include <stdlib.h>
@@ -104,124 +96,7 @@ int GetDXGIFormatBitsPerPixel(DXGI_FORMAT& dxgiFormat)
   else return 0;
 }
 
-// load and decode image from file
-int LoadImageDataFromFile(BYTE** imageData, D3D12_RESOURCE_DESC* resourceDescription, LPCWSTR filename, int* bytesPerRow)
-{
-  HRESULT hr;
-  
-  // we only need one instance of the imaging factory to create decoders and frames
-  static IWICImagingFactory* wicFactory;
-
-  // reset decoder, frame and converter since these will be different for each image we load
-  IWICBitmapDecoder* wicDecoder = NULL;
-  IWICBitmapFrameDecode* wicFrame = NULL;
-  IWICFormatConverter* wicConverter = NULL;
-
-  bool imageConverted = false;
-
-  if (wicFactory == NULL)
-  {
-    // Initialize the COM library
-    CoInitialize(NULL);
-
-    // create the WIC factory
-    hr = CoCreateInstance(
-      CLSID_WICImagingFactory,
-      NULL,
-      CLSCTX_INPROC_SERVER,
-      IID_PPV_ARGS(&wicFactory)
-    );
-    if (FAILED(hr)) return 0;
-  }
-
-  // load a decoder for the image
-  hr = wicFactory->CreateDecoderFromFilename(
-    filename,                        // Image we want to load in
-    NULL,                            // This is a vendor ID
-    GENERIC_READ,                    // We want to read from this file
-    WICDecodeMetadataCacheOnLoad,    // We will cache the metadata right away, rather than when needed, which might be unknown
-    &wicDecoder                      // the wic decoder to be created
-  );
-  if (FAILED(hr)) return 0;
-
-  // get image from decoder (this will decode the "frame")
-  hr = wicDecoder->GetFrame(0, &wicFrame);
-  if (FAILED(hr)) return 0;
-
-  WICPixelFormatGUID pixelFormat;
-  hr = wicFrame->GetPixelFormat(&pixelFormat);
-  if (FAILED(hr)) return 0;
-
-  UINT textureWidth, textureHeight;
-  hr = wicFrame->GetSize(&textureWidth, &textureHeight);
-  if (FAILED(hr)) return 0;
-
-  DXGI_FORMAT dxgiFormat = GetDXGIFormatFromWICFormat(pixelFormat);
-
-  // if the format of the image is not a supported dxgi format, try to convert it
-  if (dxgiFormat == DXGI_FORMAT_UNKNOWN)
-  {
-    WICPixelFormatGUID convertToPixelFormat = GetConvertToWICFormat(pixelFormat);
-
-    // return if no dxgi compatible format was found
-    if (convertToPixelFormat == GUID_WICPixelFormatDontCare) return 0;
-
-    dxgiFormat = GetDXGIFormatFromWICFormat(convertToPixelFormat);
-
-    hr = wicFactory->CreateFormatConverter(&wicConverter);
-    if (FAILED(hr)) return 0;
-
-    BOOL canConvert = FALSE;
-    hr = wicConverter->CanConvert(pixelFormat, convertToPixelFormat, &canConvert);
-    if (FAILED(hr) || !canConvert) return 0;
-
-    // do the conversion (wicConverter will contain the converted image)
-    hr = wicConverter->Initialize(wicFrame, convertToPixelFormat, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom);
-    if (FAILED(hr)) return 0;
-
-    // this is so we know to get the image data from the wicConverter (otherwise we will get from wicFrame)
-    imageConverted = true;
-  }
-
-  int bitsPerPixel = GetDXGIFormatBitsPerPixel(dxgiFormat);
-  *bytesPerRow = (textureWidth * bitsPerPixel) / 8;
-  int imageSize = *bytesPerRow * textureHeight;
-
-  // allocate enough memory for the raw image data
-  *imageData = (BYTE*)malloc(imageSize);
-
-  // copy (decoded) raw image data into the newly allocated memory (imageData)
-  if (imageConverted)
-  {
-    // if image format needed to be converted, the wic converter will contain the converted image
-    hr = wicConverter->CopyPixels(0, *bytesPerRow, imageSize, *imageData);
-    if (FAILED(hr)) return 0;
-  }
-  else
-  {
-    // no need to convert, just copy data from the wic frame
-    hr = wicFrame->CopyPixels(0, *bytesPerRow, imageSize, *imageData);
-    if (FAILED(hr)) return 0;
-  }
-
-  // now describe the texture with the information we have obtained from the image
-  resourceDescription->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-  resourceDescription->Alignment = 0; // may be 0, 4KB, 64KB, or 4MB. 0 will let runtime decide between 64KB and 4MB (4MB for multi-sampled textures)
-  resourceDescription->Width = textureWidth;
-  resourceDescription->Height = textureHeight;
-  resourceDescription->DepthOrArraySize = 1; // if 3d image, depth of 3d image. Otherwise an array of 1D or 2D textures (we only have one image, so we set 1)
-  resourceDescription->MipLevels = 1; // Number of mipmaps. We are not generating mipmaps for this texture, so we have only one level
-  resourceDescription->Format = dxgiFormat;
-  resourceDescription->SampleDesc.Count = 1;
-  resourceDescription->SampleDesc.Quality = 0;
-  resourceDescription->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN; // The arrangement of the pixels. Setting to unknown lets the driver choose the most efficient one
-  resourceDescription->Flags = D3D12_RESOURCE_FLAG_NONE; // no flags
-
-  // return the size of the image
-  return imageSize;
-}
-
-i32 LoadImageFromDisk(char* filename, ImageData* imageData)
+i32 LoadImageFromDisk(char* filename, Image* imageData)
 {
   HRESULT hr;
 
@@ -328,7 +203,7 @@ i32 LoadImageFromDisk(char* filename, ImageData* imageData)
   return imageData->size;
 }
 
-void LoadTextureFromImage(ImageData* imageData, D3D12_RESOURCE_DESC* resourceDescription)
+void LoadTextureFromImage(Image* imageData, D3D12_RESOURCE_DESC* resourceDescription)
 {
   resourceDescription->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
   resourceDescription->Alignment = 0; // may be 0, 4KB, 64KB, or 4MB. 0 will let runtime decide between 64KB and 4MB (4MB for multi-sampled textures)
@@ -343,7 +218,7 @@ void LoadTextureFromImage(ImageData* imageData, D3D12_RESOURCE_DESC* resourceDes
   resourceDescription->Flags = D3D12_RESOURCE_FLAG_NONE; // no flags
 }
 
-void UploadTextureFromImage(ImageData* imageData, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList)
+void UploadTextureFromImage(Image* imageData, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList)
 {
   D3D12_RESOURCE_DESC textureDesc = { 0 };
   LoadTextureFromImage(imageData, &textureDesc);

@@ -91,3 +91,15 @@ struct Image
 };
 // end Graphics
 // ========================================================
+// I/O
+struct dev_ReadFileResult
+{
+  u64 size;
+  void* data;
+};
+
+internal dev_ReadFileResult dev_ReadFile(char* filename);
+internal void dev_FreeFile(void* memory);
+internal b32 dev_WriteFile(char* filename, u32 memorySize, void* memory);
+
+internal i32 LoadImageFromDisk(char* filename, Image* image);

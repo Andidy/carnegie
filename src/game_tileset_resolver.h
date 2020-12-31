@@ -12,7 +12,7 @@ i32 Index(i32 x, i32 y, i32 bytesPerRow)
   return y * bytesPerRow + x * 4 + 1;
 }
 
-void ResolveTileset(ImageData* img)
+void ResolveTileset(Image* img)
 {
   // i32 size = img->size;
   u32 width = 4320; // img->width;

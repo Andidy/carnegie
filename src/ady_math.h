@@ -4,7 +4,7 @@
 #include "ady_types.h"
 #include <math.h>
 
-#define PI 3.14159265359f
+const f32 PI = 3.14159265359f;
 
 inline f32 DegToRad(f32 angle)
 {
