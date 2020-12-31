@@ -1,10 +1,10 @@
 #pragma once
 
+#include "universal.cpp"
+
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include "../libs/d3dx12.h"
-
-#include "game_platform_calls.h"
 
 struct Vertex
 {

@@ -1,8 +1,5 @@
 #pragma once
 
-#include "ady_types.h"
-#include "game_platform_calls.h"
-
 i32 Index(i32 x, i32 y, i32 bytesPerRow)
 {
   if (x < 0) x = 4319;

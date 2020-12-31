@@ -39,8 +39,6 @@ struct game_Memory
   void* scratchdata; // NOTE: Must be cleared to ZERO at startup
 };
 
-#include "game_platform_calls.h"
-
 #include "game_entity.h"
 #include "game_tileset_resolver.h"
 
