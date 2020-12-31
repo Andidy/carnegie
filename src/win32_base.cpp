@@ -1,4 +1,53 @@
-#include "win32_base.h"
+// This stuff is only up here so i can use PIX timing data
+#include <windows.h>
+#define USE_PIX
+#include "../libs/pix/pix3.h"
+
+#include "universal.cpp"
+
+// Carnegie game and engine stuff
+#include "game_carnegie.cpp"
+
+// Windows specific stuff
+#include <xinput.h>
+#include <dsound.h>
+
+// DirectX12
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include "../libs/d3dx12.h"
+
+// C libs
+#include <math.h>
+#include <stdio.h>
+
+#define win32_Assert(x) if(!(x)) { MessageBoxA(0, #x, "Assertion failed", MB_OK); __debugbreak(); }
+#define win32_Check(x) if(!(x)) { MessageBoxA(0, #x, "Check failed", MB_OK); __debugbreak(); }
+void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
+{
+  if (!SUCCEEDED(hresult)) {
+    char win32_check_succeeded_buf[128];
+    #pragma warning(suppress : 4996)
+    sprintf(win32_check_succeeded_buf, "%s: hr failed: %d", str, line);
+    MessageBoxA(0, win32_check_succeeded_buf, "CheckSucceeded failed", MB_OK);
+    __debugbreak();
+  }
+}
+#define win32_CheckSucceeded(hresult) _win32_CheckSucceeded(hresult, __FILE__, __LINE__)
+
+// broken out platform layer funcitonality
+#include "dx_renderer_image_loading.cpp"
+
+global b32 win32_running;
+global HRESULT hr;
+
+#include "dx_renderer.h"
+#include "dx_renderer.cpp"
+
+#include "win32_input.cpp"
+#include "win32_fileio.cpp"
+#include "win32_sound.cpp"
 
 u32 counter = 0;
 
@@ -113,9 +162,9 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       QueryPerformanceCounter(&lasttimer);
       u64 lastcyclecount = __rdtsc();
 
-      Game::Input gameInput[2] = { 0 };
-      Game::Input* newInput = &gameInput[0];
-      Game::Input* oldInput = &gameInput[1];
+      Input gameInput[2] = { 0 };
+      Input* newInput = &gameInput[0];
+      Input* oldInput = &gameInput[1];
 
       game_Memory gameMemory = { 0 };
       gameMemory.isInitialized = false;
@@ -166,7 +215,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         
         // Input
         *newInput = { 0 };
-        for (i32 i = 0; i < Game::NUM_KEYBOARD_BUTTONS; i++)
+        for (i32 i = 0; i < NUM_KEYBOARD_BUTTONS; i++)
         {
           newInput->keyboard.buttons[i].endedDown = oldInput->keyboard.buttons[i].endedDown;
         }
@@ -225,7 +274,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         sprintf_s(dev_buffer, "Camera Pos: %f, %f, %f\n", pos.x, pos.y, pos.z);
         OutputDebugStringA(dev_buffer);
 
-        Game::Input* temp = newInput;
+        Input* temp = newInput;
         newInput = oldInput;
         oldInput = temp;
 

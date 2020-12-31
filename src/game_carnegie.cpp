@@ -1,12 +1,101 @@
-#include "game_carnegie.h"
+#pragma once
 
-/* --------------- SOUND --------------- */
-#define PI 3.14159265359f
+#include "universal.cpp"
+
+// Macros //
+#define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
+
+#define Kilobytes(val) (1024 * (val))
+#define Megabytes(val) (1024 * Kilobytes(val))
+#define Gigabytes(val) (1024 * Megabytes(val))
+
+#define Assert(val) if(!(val)) {*(int *)0 = 0;}
+
+// GAME -> PLATFORM LAYER //
+/*
+  These are the Game data types and functions which the platform layer may
+  need to access for various reasons. For example, the game_KeyboardState
+  needs to have its key states set by the platform layer.
+*/
+// Input, Render Buffer, Timing, Sound Buffer
+
+u32 window_width;
+u32 window_height;
+f32 window_aspectRatio;
+
+struct game_SoundBuffer
+{
+  i32 samplesPerSecond;
+  i32 sampleCount;
+  i16* samples;
+};
+
+struct game_Memory
+{
+  b32 isInitialized;
+  u64 size;
+  void* data; // NOTE: Must be cleared to ZERO at startup
+  u64 scratchsize;
+  void* scratchdata; // NOTE: Must be cleared to ZERO at startup
+};
+
+#include "game_platform_calls.h"
+
+#include "game_entity.h"
+
+#include "game_tileset_resolver.h"
+
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, Input* Input, game_SoundBuffer* soundBuffer);
+
+/* Game Only */
+
+const i32 NUM_ENTITIES = 6;
+const i32 NUM_UNITS = 5;
+const i32 UNIT_ANIM_OFFSET = 7;
+struct game_State
+{
+  f32 dt;
+
+  i32 toneHertz;
+
+  Camera camera;
+  Entity entities[NUM_ENTITIES];
+
+  ImageData cat_img;
+  ImageData dog_img;
+  ImageData bird_img;
+
+  ImageData map_img;
+  ImageData map2_img;
+  ImageData tileset_img;
+  ImageData tileset2_img;
+
+  f32 anim_timer;
+  i32 anim_counter;
+  b32 anim_reset;
+
+  b32 moved_unit;
+
+  Unit unit[NUM_UNITS];
+
+  ImageData blank_unit_img;
+  ImageData unit_img;
+  ImageData unit_horseman_img;
+  ImageData unit_archer_img;
+};
+
+// Data
+// ============================================================================
+// Functions
+
+// ============================================================================
+// Sound
 internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 {
   local f32 tsin;
   i16 toneVolume = 100;
   i32 wavePeriod = soundBuffer->samplesPerSecond / toneHertz;
+  const f32 PI = 3.14159265359f;
 
   i16 *sampleOut = soundBuffer->samples;
   for (i32 sample_index = 0; sample_index < soundBuffer->sampleCount; sample_index++)
@@ -20,14 +109,9 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
   }
 }
 
-
-
-
-
-
-
-
-void UpdateCamera(Camera* camera, Game::Input* input, game_State* gameState)
+// ============================================================================
+// Game
+void UpdateCamera(Camera* camera, Input* input, game_State* gameState)
 {
   f32 speed = 0.01f * gameState->dt;
 
@@ -118,7 +202,7 @@ void CleanupUnit(Unit* unit)
   unit->dir = NONE;
 }
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Game::Input* input, game_SoundBuffer* soundBuffer)
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Input* input, game_SoundBuffer* soundBuffer)
 {
   game_State* gameState = (game_State*)gameMemory->data;
 
@@ -255,25 +339,6 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Ga
   }
 
   PIXEndEvent();
-  
-  /*
-  gameState->entities[0].pos.y += gameState->entities[0].vel.y;
-  if ((gameState->entities[0].pos.y < -1) || (gameState->entities[0].pos.y > 1))
-  {
-    gameState->entities[0].vel.y *= -1;
-  }
-
-  gameState->entities[1].pos.x += gameState->entities[1].vel.x;
-  if ((gameState->entities[1].pos.x < -1) || (gameState->entities[1].pos.x > 1))
-  {
-    gameState->entities[1].vel.x *= -1;
-  }
-
-  gameState->entities[2].pos.z += gameState->entities[2].vel.z;
-  if ((gameState->entities[2].pos.z < -1) || (gameState->entities[2].pos.z > 1))
-  {
-    gameState->entities[2].vel.z *= -1;
-  }*/
 
   for (i32 i = 0; i < NUM_UNITS; i++)
   {

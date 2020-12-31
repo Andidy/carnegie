@@ -30,4 +30,3 @@ struct ImageData
 };
 
 internal i32 LoadImageFromDisk(char* filename, ImageData* imageData);
-//internal void LoadTextureFromImage();

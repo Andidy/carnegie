@@ -5,7 +5,6 @@
 #include "../libs/d3dx12.h"
 
 #include "game_platform_calls.h"
-#include "game_carnegie.h"
 
 struct Vertex
 {
