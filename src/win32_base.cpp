@@ -1,4 +1,4 @@
-// This stuff is only up here so i can use PIX timing data
+// This stuff is only up here so i can use PIX timing data in the game code
 #include <windows.h>
 #define USE_PIX
 #include "../libs/pix/pix3.h"
