@@ -5,14 +5,12 @@
 
 // ========================================================
 // Input 
-struct ButtonState
-{
+struct ButtonState {
   i32 transitionCount;
   b32 endedDown;
 };
 
-struct ControllerState
-{
+struct ControllerState {
   b32 isAnalog;
   f32 lstartx, lstarty;
   f32 lmaxx, lmaxy;
@@ -24,11 +22,9 @@ struct ControllerState
   f32 rminx, rminy;
   f32 rendx, rendy;
 
-  union
-  {
+  union {
     ButtonState buttons[16];
-    struct
-    {
+    struct {
       ButtonState a, b, x, y;
       ButtonState up, down, left, right;
       ButtonState l1, r1;
@@ -40,13 +36,10 @@ struct ControllerState
 };
 
 const int NUM_KEYBOARD_BUTTONS = 32;
-struct KeyboardState
-{
-  union
-  {
+struct KeyboardState {
+  union {
     ButtonState buttons[NUM_KEYBOARD_BUTTONS];
-    struct
-    {
+    struct {
       ButtonState a, b, c, d, e, f, g, h, i, j, k, l,
         m, n, o, p, q, r, s, t, u, v, w, x, y, z;
       ButtonState up, down, left, right;
@@ -55,32 +48,27 @@ struct KeyboardState
   };
 };
 
-struct Input
-{
+struct Input {
   KeyboardState keyboard;
 };
 
 /////////////// Functions /////////////////////
 
-b32 keyPressed(ButtonState button)
-{
+b32 keyPressed(ButtonState button) {
   return (button.endedDown) && (button.transitionCount > 0);
 }
 
-b32 keyReleased(ButtonState button)
-{
+b32 keyReleased(ButtonState button) {
   return !(button.endedDown) && (button.transitionCount > 0);
 }
 
-b32 keyDown(ButtonState button)
-{
+b32 keyDown(ButtonState button) {
   return (button.endedDown) && (button.transitionCount == 0);
 }
 // end Input
 // ========================================================
 // Graphics
-struct Image
-{
+struct Image {
   uchar* data;
   u32 width;
   u32 height;
@@ -92,8 +80,7 @@ struct Image
 // end Graphics
 // ========================================================
 // I/O
-struct dev_ReadFileResult
-{
+struct dev_ReadFileResult {
   u64 size;
   void* data;
 };

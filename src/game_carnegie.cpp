@@ -23,15 +23,13 @@ u32 window_width;
 u32 window_height;
 f32 window_aspectRatio;
 
-struct game_SoundBuffer
-{
+struct game_SoundBuffer {
   i32 samplesPerSecond;
   i32 sampleCount;
   i16* samples;
 };
 
-struct game_Memory
-{
+struct game_Memory {
   b32 isInitialized;
   u64 size;
   void* data; // NOTE: Must be cleared to ZERO at startup
@@ -42,15 +40,14 @@ struct game_Memory
 #include "game_entity.h"
 #include "game_tileset_resolver.h"
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* game_Memory, Input* Input, game_SoundBuffer* soundBuffer);
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory * game_Memory, Input * Input, game_SoundBuffer * soundBuffer);
 
 /* Game Only */
 
 const i32 NUM_ENTITIES = 6;
 const i32 NUM_UNITS = 5;
 const i32 UNIT_ANIM_OFFSET = 7;
-struct game_State
-{
+struct game_State {
   f32 dt;
 
   i32 toneHertz;
@@ -87,15 +84,13 @@ struct game_State
 
 // ============================================================================
 // Sound
-internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
-{
+internal void GameOutputSound(game_SoundBuffer* soundBuffer, i32 toneHertz) {
   local f32 tsin;
   i16 toneVolume = 100;
   i32 wavePeriod = soundBuffer->samplesPerSecond / toneHertz;
 
-  i16 *sampleOut = soundBuffer->samples;
-  for (i32 sample_index = 0; sample_index < soundBuffer->sampleCount; sample_index++)
-  {
+  i16* sampleOut = soundBuffer->samples;
+  for (i32 sample_index = 0; sample_index < soundBuffer->sampleCount; sample_index++) {
     f32 sinvalue = sinf(tsin);
     i16 sampleValue = (i16)(sinvalue * toneVolume);
     *sampleOut++ = sampleValue;
@@ -107,53 +102,43 @@ internal void GameOutputSound(game_SoundBuffer *soundBuffer, i32 toneHertz)
 
 // ============================================================================
 // Game
-void UpdateCamera(Camera* camera, Input* input, game_State* gameState)
-{
+void UpdateCamera(Camera* camera, Input* input, game_State* gameState) {
   f32 speed = 0.01f * gameState->dt;
 
-  if (keyDown(input->keyboard.space))
-  {
+  if (keyDown(input->keyboard.space)) {
     speed *= 100;
   }
 
-  if (keyDown(input->keyboard.w))
-  {
+  if (keyDown(input->keyboard.w)) {
     camera->pos.y += speed;
     camera->target.y += speed;
   }
 
-  if (keyDown(input->keyboard.s))
-  {
+  if (keyDown(input->keyboard.s)) {
     camera->pos.y -= speed;
     camera->target.y -= speed;
   }
 
-  if (keyDown(input->keyboard.a))
-  {
+  if (keyDown(input->keyboard.a)) {
     camera->pos.x -= speed;
     camera->target.x -= speed;
   }
 
-  if (keyDown(input->keyboard.d))
-  {
+  if (keyDown(input->keyboard.d)) {
     camera->pos.x += speed;
     camera->target.x += speed;
   }
 
-  if (keyDown(input->keyboard.r))
-  {
+  if (keyDown(input->keyboard.r)) {
     camera->pos.z += sqrtf(0.02f * speed * (f32)fabs((double)camera->pos.z));
-    if (camera->pos.z > 0.0f)
-    {
+    if (camera->pos.z > 0.0f) {
       camera->pos.z = -0.01f;
     }
   }
 
-  if (keyDown(input->keyboard.f))
-  {
+  if (keyDown(input->keyboard.f)) {
     camera->pos.z -= sqrtf(0.02f * speed * (f32)fabs((double)camera->pos.z));
-    if (camera->pos.z < -800.0f)
-    {
+    if (camera->pos.z < -800.0f) {
       camera->pos.z = -800.0f;
     }
   }
@@ -161,50 +146,41 @@ void UpdateCamera(Camera* camera, Input* input, game_State* gameState)
   camera->view = LookAtMat(camera->pos, camera->target, camera->up);
 }
 
-void MarchUnit(Unit* unit, Direction dir, vec2 new_pos)
-{
+void MarchUnit(Unit* unit, Direction dir, vec2 new_pos) {
   unit->dir = dir;
   unit->new_pos = new_pos;
 }
 
-void MoveUnit(Unit* unit)
-{
+void MoveUnit(Unit* unit) {
   unit->old_pos = unit->pos;
   unit->pos = unit->new_pos;
 
-  if (unit->dir == WEST)
-  {
+  if (unit->dir == WEST) {
     unit->animation = 2;
   }
-  else if (unit->dir == EAST)
-  {
+  else if (unit->dir == EAST) {
     unit->animation = 3;
   }
-  else if (unit->dir == SOUTH)
-  {
+  else if (unit->dir == SOUTH) {
     unit->animation = 4;
   }
-  else if (unit->dir == NORTH)
-  {
+  else if (unit->dir == NORTH) {
     unit->animation = 5;
   }
 }
 
-void CleanupUnit(Unit* unit)
-{
+void CleanupUnit(Unit* unit) {
   unit->old_pos = unit->pos;
   unit->new_pos = unit->pos;
   unit->animation = 0;
   unit->dir = NONE;
 }
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Input* input, game_SoundBuffer* soundBuffer)
-{
+internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Input* input, game_SoundBuffer* soundBuffer) {
   game_State* gameState = (game_State*)gameMemory->data;
 
   // Probably want to change this to being its own function call
-  if (!gameMemory->isInitialized)
-  {
+  if (!gameMemory->isInitialized) {
     gameMemory->isInitialized = true;
     gameState->dt = dt;
     gameState->anim_timer = 0.0f;
@@ -228,7 +204,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
     gameState->entities[0] = { {0, 0, 0}, {0, 0.0001f, 0}, {1, 1, 1}, -1 };
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
-    
+
     gameState->entities[3] = { {0, 0, 1.005f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
     gameState->entities[4] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 9 };
 
@@ -250,7 +226,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
     LoadImageFromDisk("../test_assets/tiled_tileset_test.png", &(gameState->tileset2_img));
 
     LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->blank_unit_img));
-    
+
     Image* src = &(gameState->blank_unit_img);
     Image* dest = &(gameState->unit_img);
 
@@ -260,7 +236,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
     dest->size = src->size;
     dest->data = (uchar*)malloc(dest->size);
     memcpy(dest->data, src->data, src->size);
-    
+
     LoadImageFromDisk("../test_assets/horseman.png", &(gameState->unit_horseman_img));
     LoadImageFromDisk("../test_assets/archer.png", &(gameState->unit_archer_img));
 
@@ -273,12 +249,10 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
 
   gameState->dt = dt;
   gameState->anim_timer += dt;
-  if (gameState->anim_timer > 125.0f)
-  {
+  if (gameState->anim_timer > 125.0f) {
     gameState->anim_counter = (gameState->anim_counter + 1) % 4;
     gameState->anim_timer = 0.0f;
-    if (gameState->anim_counter == 0)
-    {
+    if (gameState->anim_counter == 0) {
       gameState->anim_reset = 1;
     }
   }
@@ -287,41 +261,36 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
   PIXBeginEvent(color, "USER INPUT");
   UpdateCamera(&gameState->camera, input, gameState);
 
-  if (keyReleased(input->keyboard.left))
-  {
+  if (keyReleased(input->keyboard.left)) {
     vec2 pos = gameState->unit[0].pos;
     pos.x -= 1.0f;
     MarchUnit(&(gameState->unit[0]), WEST, pos);
     gameState->moved_unit = 1;
   }
-  if (keyReleased(input->keyboard.right))
-  {
+  if (keyReleased(input->keyboard.right)) {
     vec2 pos = gameState->unit[0].pos;
     pos.x += 1.0f;
     MarchUnit(&(gameState->unit[0]), EAST, pos);
     gameState->moved_unit = 1;
   }
-  if (keyReleased(input->keyboard.down))
-  {
+  if (keyReleased(input->keyboard.down)) {
     vec2 pos = gameState->unit[0].pos;
     pos.y += 1.0f;
     MarchUnit(&(gameState->unit[0]), SOUTH, pos);
     gameState->moved_unit = 1;
   }
-  if (keyReleased(input->keyboard.up))
-  {
+  if (keyReleased(input->keyboard.up)) {
     vec2 pos = gameState->unit[0].pos;
     pos.y -= 1.0f;
     MarchUnit(&(gameState->unit[0]), NORTH, pos);
     gameState->moved_unit = 1;
   }
-  
-  if (gameState->anim_reset)
-  {
+
+  if (gameState->anim_reset) {
     //gameState->moved_unit = 0;
     color = PIX_COLOR(0, 255, 255);
     PIXBeginEvent(color, "CLEAR UNIT DATA");
-    
+
     Image* src = &(gameState->blank_unit_img);
     Image* dest = &(gameState->unit_img);
 
@@ -336,20 +305,16 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
 
   PIXEndEvent();
 
-  for (i32 i = 0; i < NUM_UNITS; i++)
-  {
-    if (gameState->anim_reset)
-    {
-      if (gameState->unit[i].animation != 0)
-      {
+  for (i32 i = 0; i < NUM_UNITS; i++) {
+    if (gameState->anim_reset) {
+      if (gameState->unit[i].animation != 0) {
         CleanupUnit(&(gameState->unit[i]));
       }
-      else if (gameState->unit[i].dir != NONE)
-      {
+      else if (gameState->unit[i].dir != NONE) {
         MoveUnit(&(gameState->unit[i]));
       }
     }
-    
+
     vec2 pos = gameState->unit[i].pos;
     vec2 old_pos = gameState->unit[i].old_pos;
 
@@ -357,28 +322,23 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, In
     gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
 
     i32 anim = gameState->unit[i].animation;
-    if (anim == 0 || anim == 1) // stationary
-    {
+    if (anim == 0 || anim == 1) { // stationary
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
     }
-    if (anim == 2) // left
-    {
+    if (anim == 2) { // left
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)7;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)8;
     }
-    if (anim == 3) // right
-    {
+    if (anim == 3) { // right
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
     }
-    if (anim == 4) // down
-    {
+    if (anim == 4) { // down
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)5;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)6;
     }
-    if (anim == 5) // up
-    {
+    if (anim == 5) { // up
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
     }

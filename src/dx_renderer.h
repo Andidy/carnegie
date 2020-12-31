@@ -6,16 +6,14 @@
 #include <dxgi1_6.h>
 #include "../libs/d3dx12.h"
 
-struct Vertex
-{
+struct Vertex {
   f32 x, y, z;
   f32 r, g, b, a;
   f32 u, v;
   f32 xn, yn, zn;
 };
 
-struct ConstantBufferPerObject
-{
+struct ConstantBufferPerObject {
   mat4 mvp;
   i32 is_animated;
   i32 layer_index;
@@ -54,8 +52,7 @@ ID3D12DescriptorHeap* rtvHeap;
 UINT rtvDescSize;
 
 
-struct Renderer
-{
+struct Renderer {
   // --- Input Data for GPU ---
   // rootSig and pso should be made into arrays and expanded as neccesary
   ID3D12RootSignature* rootSignature;
@@ -73,8 +70,7 @@ struct Renderer
 Renderer renderer;
 
 // app resources
-struct Model
-{
+struct Model {
   ID3D12Resource* vertexBuffer;
   D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
   ID3D12Resource* indexBuffer;
@@ -96,8 +92,7 @@ u8* cbvGPUAddress[frameCount];
 // add some automation here?
 ID3D12DescriptorHeap* mainDescriptorHeap;
 
-struct Texture
-{
+struct Texture {
   ID3D12Resource* textureBuffer;
   ID3D12Resource* textureBufferUploadHeap;
 };

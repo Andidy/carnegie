@@ -24,8 +24,7 @@
 
 #define win32_Assert(x) if(!(x)) { MessageBoxA(0, #x, "Assertion failed", MB_OK); __debugbreak(); }
 #define win32_Check(x) if(!(x)) { MessageBoxA(0, #x, "Check failed", MB_OK); __debugbreak(); }
-void _win32_CheckSucceeded(HRESULT hresult, char* str, int line)
-{
+void _win32_CheckSucceeded(HRESULT hresult, char* str, int line) {
   if (!SUCCEEDED(hresult)) {
     char win32_check_succeeded_buf[128];
     #pragma warning(suppress : 4996)
@@ -49,34 +48,32 @@ global HRESULT hr;
 #include "win32_fileio.cpp"
 #include "win32_sound.cpp"
 
-LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
-{
+LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
   LRESULT result = 0;
-  
-  switch(message)
-  {
+
+  switch (message) {
     case WM_SIZE:
     {
       OutputDebugStringA("WM_SIZE\n");
     } break;
-    
+
     case WM_DESTROY:
     {
       win32_running = false;
       OutputDebugStringA("WM_DESTROY\n");
     } break;
-    
+
     case WM_CLOSE:
     {
       win32_running = false;
       OutputDebugStringA("WM_CLOSE\n");
     } break;
-    
+
     case WM_ACTIVATEAPP:
     {
       OutputDebugStringA("WM_ACTIVATEAPP\n");
     } break;
-    
+
     case WM_KEYUP:
     case WM_KEYDOWN:
     case WM_SYSKEYUP:
@@ -92,15 +89,13 @@ LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wpar
       result = DefWindowProc(window, message, wparam, lparam);
     } break;
   }
-  
+
   return result;
 }
 
-i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow)
-{
+i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow) {
   hr = SetThreadDescription(GetCurrentThread(), L"simulation_thread");
-  if (FAILED(hr))
-  {
+  if (FAILED(hr)) {
     // Call failed.
   }
   
@@ -123,8 +118,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
   // WindowClass.hIcon = ;
   windowClass.lpszClassName = "CarnegieWindowClass";
 
-  if(RegisterClass(&windowClass))
-  {
+  if (RegisterClass(&windowClass)) {
     HWND window = CreateWindowExA(
       0,
       windowClass.lpszClassName,
@@ -135,8 +129,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       0, 0, instance, 0
     );
 
-    if(window)
-    {
+    if (window) {
       //HDC deviceContext = GetDC(window);
       
       // Sound Init
@@ -184,8 +177,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
 
       // GAME LOOP ----------------------------------------------
 
-      while(win32_running)
-      {
+      while(win32_running) {
         #pragma region timing
         LARGE_INTEGER endtimer;
         QueryPerformanceCounter(&endtimer);
@@ -209,8 +201,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         
         // Input
         *newInput = { 0 };
-        for (i32 i = 0; i < NUM_KEYBOARD_BUTTONS; i++)
-        {
+        for (i32 i = 0; i < NUM_KEYBOARD_BUTTONS; i++) {
           newInput->keyboard.buttons[i].endedDown = oldInput->keyboard.buttons[i].endedDown;
         }
         win32_UpdateInput(newInput);
@@ -222,18 +213,15 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         DWORD targetCursor = 0;
         DWORD bytesToWrite = 0;
         b32 soundIsValid = false;
-        if (SUCCEEDED(win32_SecondarySoundBuffer->GetCurrentPosition(&playCursor, &writeCursor)))
-        {
+        if (SUCCEEDED(win32_SecondarySoundBuffer->GetCurrentPosition(&playCursor, &writeCursor))) {
           byteToLock = (soundstruct.runningSampleIndex * soundstruct.bytesPerSample) % soundstruct.secondaryBufferSize;
           targetCursor = ((playCursor + (soundstruct.latencySampleCount * soundstruct.bytesPerSample)) % soundstruct.secondaryBufferSize);
 
-          if (byteToLock > targetCursor)
-          {
+          if (byteToLock > targetCursor) {
             bytesToWrite = (soundstruct.secondaryBufferSize - byteToLock);
             bytesToWrite += targetCursor;
           }
-          else
-          {
+          else {
             bytesToWrite = targetCursor - byteToLock;
           }
           soundIsValid = true;
@@ -253,8 +241,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         GameUpdateAndPrepareRenderData(msperframe, &gameMemory, newInput, &soundBuffer);
 
         // Direct Sound Test Continued
-        if(soundIsValid)
-        {
+        if(soundIsValid) {
           win32_FillSoundBuffer(&soundstruct, byteToLock, bytesToWrite, &soundBuffer);
         }
 

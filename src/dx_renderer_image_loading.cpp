@@ -3,8 +3,7 @@
 #include <stdlib.h>
 
 // get the dxgi format equivilent of a wic format
-DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID)
-{
+DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID) {
   if (wicFormatGUID == GUID_WICPixelFormat128bppRGBAFloat) return DXGI_FORMAT_R32G32B32A32_FLOAT;
   else if (wicFormatGUID == GUID_WICPixelFormat64bppRGBAHalf) return DXGI_FORMAT_R16G16B16A16_FLOAT;
   else if (wicFormatGUID == GUID_WICPixelFormat64bppRGBA) return DXGI_FORMAT_R16G16B16A16_UNORM;
@@ -26,8 +25,7 @@ DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID)
 }
 
 // get a dxgi compatible wic format from another wic format
-WICPixelFormatGUID GetConvertToWICFormat(WICPixelFormatGUID& wicFormatGUID)
-{
+WICPixelFormatGUID GetConvertToWICFormat(WICPixelFormatGUID& wicFormatGUID) {
   if (wicFormatGUID == GUID_WICPixelFormatBlackWhite) return GUID_WICPixelFormat8bppGray;
   else if (wicFormatGUID == GUID_WICPixelFormat1bppIndexed) return GUID_WICPixelFormat32bppRGBA;
   else if (wicFormatGUID == GUID_WICPixelFormat2bppIndexed) return GUID_WICPixelFormat32bppRGBA;
@@ -75,8 +73,7 @@ WICPixelFormatGUID GetConvertToWICFormat(WICPixelFormatGUID& wicFormatGUID)
 }
 
 // get the number of bits per pixel for a dxgi format
-int GetDXGIFormatBitsPerPixel(DXGI_FORMAT& dxgiFormat)
-{
+int GetDXGIFormatBitsPerPixel(DXGI_FORMAT& dxgiFormat) {
   if (dxgiFormat == DXGI_FORMAT_R32G32B32A32_FLOAT) return 128;
   else if (dxgiFormat == DXGI_FORMAT_R16G16B16A16_FLOAT) return 64;
   else if (dxgiFormat == DXGI_FORMAT_R16G16B16A16_UNORM) return 64;
@@ -96,8 +93,7 @@ int GetDXGIFormatBitsPerPixel(DXGI_FORMAT& dxgiFormat)
   else return 0;
 }
 
-i32 LoadImageFromDisk(char* filename, Image* imageData)
-{
+i32 LoadImageFromDisk(char* filename, Image* imageData) {
   HRESULT hr;
 
   // we only need one instance of the imaging factory to create decoders and frames
@@ -110,8 +106,7 @@ i32 LoadImageFromDisk(char* filename, Image* imageData)
 
   bool imageConverted = false;
 
-  if (wicFactory == NULL)
-  {
+  if (wicFactory == NULL) {
     // Initialize the COM library
     CoInitialize(NULL);
 
@@ -126,8 +121,7 @@ i32 LoadImageFromDisk(char* filename, Image* imageData)
   }
 
   wchar_t* fuck_windows = (wchar_t*)malloc(128);
-  if (mbstowcs_s(NULL, fuck_windows, 128, filename, strlen(filename)))
-  {
+  if (mbstowcs_s(NULL, fuck_windows, 128, filename, strlen(filename))) {
     return 0;
   }
 
@@ -155,8 +149,7 @@ i32 LoadImageFromDisk(char* filename, Image* imageData)
   DXGI_FORMAT dxgiFormat = GetDXGIFormatFromWICFormat(pixelFormat);
 
   // if the format of the image is not a supported dxgi format, try to convert it
-  if (dxgiFormat == DXGI_FORMAT_UNKNOWN)
-  {
+  if (dxgiFormat == DXGI_FORMAT_UNKNOWN) {
     WICPixelFormatGUID convertToPixelFormat = GetConvertToWICFormat(pixelFormat);
 
     // return if no dxgi compatible format was found
@@ -187,14 +180,12 @@ i32 LoadImageFromDisk(char* filename, Image* imageData)
   imageData->data = (uchar*)malloc(imageData->size);
 
   // copy (decoded) raw image data into the newly allocated memory (imageData)
-  if (imageConverted)
-  {
+  if (imageConverted) {
     // if image format needed to be converted, the wic converter will contain the converted image
     hr = wicConverter->CopyPixels(0, imageData->bytesPerRow, imageData->size, imageData->data);
     if (FAILED(hr)) return 0;
-  }
-  else
-  {
+  } 
+  else {
     // no need to convert, just copy data from the wic frame
     hr = wicFrame->CopyPixels(0, imageData->bytesPerRow, imageData->size, imageData->data);
     if (FAILED(hr)) return 0;
@@ -203,8 +194,7 @@ i32 LoadImageFromDisk(char* filename, Image* imageData)
   return imageData->size;
 }
 
-void LoadTextureFromImage(Image* imageData, D3D12_RESOURCE_DESC* resourceDescription)
-{
+void LoadTextureFromImage(Image* imageData, D3D12_RESOURCE_DESC* resourceDescription) {
   resourceDescription->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
   resourceDescription->Alignment = 0; // may be 0, 4KB, 64KB, or 4MB. 0 will let runtime decide between 64KB and 4MB (4MB for multi-sampled textures)
   resourceDescription->Width = imageData->width;
@@ -218,8 +208,7 @@ void LoadTextureFromImage(Image* imageData, D3D12_RESOURCE_DESC* resourceDescrip
   resourceDescription->Flags = D3D12_RESOURCE_FLAG_NONE; // no flags
 }
 
-void UploadTextureFromImage(Image* imageData, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList)
-{
+void UploadTextureFromImage(Image* imageData, i32 index, ID3D12Resource** textureBuffer, ID3D12Resource** textureBufferUploadHeap, ID3D12DescriptorHeap** mainDescHeap, ID3D12Device* _device, ID3D12GraphicsCommandList* _commandList) {
   D3D12_RESOURCE_DESC textureDesc = { 0 };
   LoadTextureFromImage(imageData, &textureDesc);
 

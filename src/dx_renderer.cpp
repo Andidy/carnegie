@@ -4,14 +4,12 @@ ID3D12Debug* debugController;
 
 /* ------------------- RENDERING ------------------- */
 #pragma region WIN32
-typedef struct win32_WindowDimension
-{
+typedef struct win32_WindowDimension {
   i32 width;
   i32 height;
 } win32_WindowDimension;
 
-internal win32_WindowDimension win32_GetWindowDimension(HWND window)
-{
+internal win32_WindowDimension win32_GetWindowDimension(HWND window) {
   RECT clientRect;
   GetClientRect(window, &clientRect);
 
@@ -24,8 +22,7 @@ internal win32_WindowDimension win32_GetWindowDimension(HWND window)
 
 #pragma region D3D12
 
-void WaitForPreviousFrame()
-{
+void WaitForPreviousFrame() {
   hr = 0;
 
   // swap current rtv buffer index so we draw on the correct buffer
@@ -34,8 +31,7 @@ void WaitForPreviousFrame()
   // if the current fence value is less than "fenceValue"
   // then we know the GPU has not finished executing the command queue
   // since it has not reached the commandQueue->Signal() command
-  if (renderer.fence[renderer.frameIndex]->GetCompletedValue() < renderer.fenceValue[renderer.frameIndex])
-  {
+  if (renderer.fence[renderer.frameIndex]->GetCompletedValue() < renderer.fenceValue[renderer.frameIndex]) {
     hr = renderer.fence[renderer.frameIndex]->SetEventOnCompletion(renderer.fenceValue[renderer.frameIndex], renderer.fenceEvent);
     win32_CheckSucceeded(hr);
 
@@ -47,8 +43,7 @@ void WaitForPreviousFrame()
   renderer.fenceValue[renderer.frameIndex]++;
 }
 
-void InitD3D(HWND window, game_Memory* gameMemory)
-{
+void InitD3D(HWND window, game_Memory* gameMemory) {
   /* Create the device */
   IDXGIFactory4* dxgiFactory;
   hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
@@ -58,27 +53,23 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   i32 adapterIndex = 0;
   b32 adapterFound = false;
 
-  while (dxgiFactory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND)
-  {
+  while (dxgiFactory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND) {
     DXGI_ADAPTER_DESC1 desc;
     adapter->GetDesc1(&desc);
-    if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-    {
+    if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
       adapterIndex++;
       continue;
     }
 
     hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), 0);
-    if (SUCCEEDED(hr))
-    {
+    if (SUCCEEDED(hr)) {
       adapterFound = true;
       break;
     }
     adapterIndex++;
   }
 
-  if (!adapterFound)
-  {
+  if (!adapterFound) {
     MessageBoxA(0, "No suitable GPU detected", "Adapter not found", MB_OK);
     __debugbreak();
   }
@@ -130,8 +121,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-    for (i32 i = 0; i < frameCount; i++)
-    {
+    for (i32 i = 0; i < frameCount; i++) {
       // Create an rtv for each frame
       hr = swapchain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
       win32_CheckSucceeded(hr);
@@ -142,8 +132,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
     }
   }
 
-  for (i32 i = 0; i < frameCount; i++)
-  {
+  for (i32 i = 0; i < frameCount; i++) {
     hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i]));
     win32_CheckSucceeded(hr);
   }
@@ -153,8 +142,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   win32_CheckSucceeded(hr);
 
   // Create Fences & Fence Events
-  for (i32 i = 0; i < frameCount; i++)
-  {
+  for (i32 i = 0; i < frameCount; i++) {
     hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&renderer.fence[i]));
     win32_CheckSucceeded(hr);
     renderer.fenceValue[i] = 0;
@@ -162,8 +150,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   // Create an event handle to use for frame synchronization
   renderer.fenceEvent = CreateEvent(0, false, false, 0);
-  if (renderer.fenceEvent == 0)
-  {
+  if (renderer.fenceEvent == 0) {
     hr = HRESULT_FROM_WIN32(GetLastError());
     win32_CheckSucceeded(hr);
   }
@@ -250,8 +237,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   ID3DBlob* errorBuff; // a buffer holding the error data if any
   hr = D3DCompileFromFile(L"../VertexShader.hlsl", 0, 0, "main", "vs_5_0",
     D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &vertexShader, &errorBuff);
-  if (FAILED(hr))
-  {
+  if (FAILED(hr)) {
     OutputDebugStringA((char*)errorBuff->GetBufferPointer());
     __debugbreak();
   }
@@ -267,8 +253,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
     D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | 
     D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES,
     0, &pixelShader, &errorBuff);
-  if (FAILED(hr))
-  {
+  if (FAILED(hr)) {
     OutputDebugStringA((char*)errorBuff->GetBufferPointer());
     __debugbreak();
   }
@@ -401,8 +386,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
 
   ID3DBlob* tilemapSignature;
   hr = D3D12SerializeRootSignature(&tilemapRootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &tilemapSignature, &errorBuff);
-  if (FAILED(hr))
-  {
+  if (FAILED(hr)) {
     OutputDebugStringA((char*)errorBuff->GetBufferPointer());
     __debugbreak();
   }
@@ -435,8 +419,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
     D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | 
     D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES,
     0, &tilemappixelShader, &tilemapErrorBuff);
-  if (FAILED(hr))
-  {
+  if (FAILED(hr)) {
     OutputDebugStringA((char*)tilemapErrorBuff->GetBufferPointer());
     __debugbreak();
   }
@@ -774,8 +757,7 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   // heap, one for each cube, thats only 64x2 bits, or 128 bits we are using for each
   // resource, and each resource must be at least 64KB (65536 bits)
 
-  for (i32 i = 0; i < frameCount; i++)
-  {
+  for (i32 i = 0; i < frameCount; i++) {
     // create resource for cube 1
     hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -873,12 +855,10 @@ void InitD3D(HWND window, game_Memory* gameMemory)
   scissorRect.bottom = window_height;
 
   OutputDebugStringA("Successfully Initialized D3D\n");
-  
 }
 
 
-void Update(HWND window, game_Memory* gameMemory)
-{
+void Update(HWND window, game_Memory* gameMemory) {
   game_State* gameState = (game_State*)gameMemory->data;
   Camera* camera = &(gameState->camera);
 
@@ -886,8 +866,7 @@ void Update(HWND window, game_Memory* gameMemory)
   // this can be used for all objects in the world
   mat4 vp = MulMat(camera->proj, camera->view);
 
-  for (int i = 0; i < NUM_ENTITIES; i++)
-  {
+  for (int i = 0; i < NUM_ENTITIES; i++) {
     mat4 trans = TranslateMat(gameState->entities[i].pos);
     // mat4 rot = RotateMat();
     mat4 scale = ScaleMat(gameState->entities[i].scale);
@@ -907,8 +886,7 @@ void Update(HWND window, game_Memory* gameMemory)
     cbPerObject.anim_time = anim_time;
     memcpy(cbvGPUAddress[renderer.frameIndex] + i * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
      
-    if (i == 5) // temporary for unit tilemap
-    {
+    if (i == 5) { // temporary for unit tilemap
       // Store texture data in upload heap
       D3D12_SUBRESOURCE_DATA textureData = { 0 };
       textureData.pData = &(gameState->unit_img.data[0]);
@@ -926,8 +904,7 @@ void Update(HWND window, game_Memory* gameMemory)
 }
 
 
-void UpdatePipeline(HWND window, game_Memory* gameMemory)
-{
+void UpdatePipeline(HWND window, game_Memory* gameMemory) {
   hr = 0;
 
   WaitForPreviousFrame();
@@ -1040,8 +1017,7 @@ void UpdatePipeline(HWND window, game_Memory* gameMemory)
   win32_CheckSucceeded(hr);
 }
 
-void Render(HWND window, game_Memory* gameMemory)
-{
+void Render(HWND window, game_Memory* gameMemory) {
   hr = 0;
 
   UpdatePipeline(window, gameMemory);

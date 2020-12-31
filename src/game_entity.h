@@ -1,7 +1,6 @@
 #pragma once
 
-struct Camera
-{
+struct Camera {
   vec3 pos;
   vec3 target;
   vec3 up;
@@ -10,8 +9,7 @@ struct Camera
   mat4 view;
 };
 
-struct Entity
-{
+struct Entity {
   vec3 pos;
   vec3 vel;
   vec3 scale;
@@ -30,8 +28,11 @@ enum Direction {
   NUM_DIRECTIONS
 };
 
-struct Unit
-{
+struct Tilemap {
+
+};
+
+struct Unit {
   vec2 old_pos;
   vec2 pos;
   vec2 new_pos;

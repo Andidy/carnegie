@@ -1,25 +1,22 @@
 #pragma once
 
-internal dev_ReadFileResult dev_ReadFile(char* filename)
-{
+internal dev_ReadFileResult dev_ReadFile(char* filename) {
   dev_ReadFileResult result = { 0 };
   HANDLE file = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-  if (file != INVALID_HANDLE_VALUE)
-  {
+  
+  if (file != INVALID_HANDLE_VALUE) {
     LARGE_INTEGER fileSize;
-    if (GetFileSizeEx(file, &fileSize))
-    {
+    
+    if (GetFileSizeEx(file, &fileSize)) {
       Assert(fileSize.QuadPart <= 0xFFFFFFFF);
       result.data = VirtualAlloc(0, fileSize.QuadPart, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-      if (result.data)
-      {
+      
+      if (result.data) {
         DWORD bytesRead;
-        if (ReadFile(file, result.data, (i32)fileSize.QuadPart, &bytesRead, 0) && (bytesRead == fileSize.QuadPart))
-        {
+        if (ReadFile(file, result.data, (i32)fileSize.QuadPart, &bytesRead, 0) && (bytesRead == fileSize.QuadPart)) {
           result.size = fileSize.QuadPart;
         }
-        else
-        {
+        else {
           dev_FreeFile(result.data);
           result.data = 0;
         }
@@ -30,27 +27,23 @@ internal dev_ReadFileResult dev_ReadFile(char* filename)
   return result;
 }
 
-internal void dev_FreeFile(void* memory)
-{
-  if (memory)
-  {
+internal void dev_FreeFile(void* memory) {
+  if (memory) {
     VirtualFree(memory, 0, MEM_RELEASE);
   }
 }
 
-internal b32 dev_WriteFile(char* filename, u32 memorySize, void* memory)
-{
+internal b32 dev_WriteFile(char* filename, u32 memorySize, void* memory) {
   b32 result = false;
   HANDLE file = CreateFileA(filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-  if (file != INVALID_HANDLE_VALUE)
-  {
+  
+  if (file != INVALID_HANDLE_VALUE) {
     DWORD bytesWritten;
-    if (WriteFile(file, memory, memorySize, &bytesWritten, 0))
-    {
+    
+    if (WriteFile(file, memory, memorySize, &bytesWritten, 0)) {
       result = (bytesWritten == memorySize);
     }
-    else
-    {
+    else {
       // error
     }
     CloseHandle(file);

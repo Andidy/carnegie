@@ -6,54 +6,44 @@
 
 const f32 PI = 3.14159265359f;
 
-inline f32 DegToRad(f32 angle)
-{
+inline f32 DegToRad(f32 angle) {
     return (angle * (PI / 180.0f));
 }
 
 // Vector 2 ----------------------------------------------------------------
 
-typedef struct vec2
-{
-  union
-  {
+typedef struct vec2 {
+  union {
     struct { f32 x; f32 y; };
     struct { f32 u; f32 v; };
     f32 data[2];
   };
 } vec2;
 
-inline vec2 Vec2(f32 x, f32 y)
-{
+inline vec2 Vec2(f32 x, f32 y) {
   return { x, y };
 }
 
-typedef struct ivec2
-{
-  union
-  {
+typedef struct ivec2 {
+  union {
     struct { i32 x; i32 y; };
     struct { i32 u; i32 v; };
     i32 data[2];
   };
 } ivec2;
 
-inline ivec2 IVec2(i32 x, i32 y)
-{
+inline ivec2 IVec2(i32 x, i32 y) {
   return { x, y };
 }
 
-inline i32 Vec2To1DIndex(vec2 v, i32 width)
-{
+inline i32 Vec2To1DIndex(vec2 v, i32 width) {
   return (i32)v.x + (i32)v.y * width;
 }
 
 // Vector 3 ----------------------------------------------------------------
 
-typedef struct vec3
-{
-  union
-  {
+typedef struct vec3 {
+  union {
     struct { f32 x; f32 y; f32 z; };
     struct { f32 u; f32 v; f32 w; };
     struct { f32 r; f32 g; f32 b; };
@@ -61,77 +51,63 @@ typedef struct vec3
   };
 } vec3;
 
-inline vec3 Vec3(f32 x, f32 y, f32 z)
-{
+inline vec3 Vec3(f32 x, f32 y, f32 z) {
   return {x, y, z};
 }
 
-inline vec3 ZeroVec()
-{
+inline vec3 ZeroVec() {
   return {0.0f, 0.0f, 0.0f};
 }
 
-inline vec3 OneVec()
-{
+inline vec3 OneVec() {
   return {1.0f, 1.0f, 1.0f};
 }
 
-inline vec3 UpVec()
-{
+inline vec3 UpVec() {
   return {0.0f, 1.0f, 0.0f};
 }
 
-inline vec3 NegVec(vec3 v1)
-{
+inline vec3 NegVec(vec3 v1) {
   return {-1.0f * v1.x, -1.0f * v1.y, -1.0f * v1.z};
 }
 
-inline vec3 AddVec(vec3 v1, vec3 v2)
-{
+inline vec3 AddVec(vec3 v1, vec3 v2) {
   return {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
 }
 
-inline vec3 SubVec(vec3 v1, vec3 v2)
-{
+inline vec3 SubVec(vec3 v1, vec3 v2) {
   return {v1.x - v2.x, v1.y - v2.y, v1.z - v2.z};
 }
 
-inline vec3 ScaleVec(vec3 v1, f32 f)
-{
+inline vec3 ScaleVec(vec3 v1, f32 f) {
   return {v1.x * f, v1.y * f, v1.z * f};
 }
 
-inline vec3 MulVec(vec3 v1, vec3 v2)
-{
+inline vec3 MulVec(vec3 v1, vec3 v2) {
   return {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z};
 }
 
-inline f32 Dot(vec3 v1, vec3 v2)
-{
+inline f32 Dot(vec3 v1, vec3 v2) {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-inline vec3 Cross(vec3 v1, vec3 v2)
-{
-  return {v1.y * v2.z - v1.z * v2.y,
-          v1.z * v2.x - v1.x * v2.z,
-          v1.x * v2.y - v1.y * v2.x};
+inline vec3 Cross(vec3 v1, vec3 v2) {
+  return { v1.y * v2.z - v1.z * v2.y,
+           v1.z * v2.x - v1.x * v2.z,
+           v1.x * v2.y - v1.y * v2.x };
 }
 
-inline f32 Distance(vec3 v1, vec3 v2)
-{
+inline f32 Distance(vec3 v1, vec3 v2) {
   vec3 dist = SubVec(v2, v1);
   return sqrtf(Dot(dist, dist));
 }
 
 // TODO: Replace sqrtf with custom implementation?
-inline f32 VecLen(vec3 v)
-{
+inline f32 VecLen(vec3 v) {
   return sqrtf(Dot(v, v));
 }
 
-inline vec3 NormVec(vec3 v)
-{
+inline vec3 NormVec(vec3 v) {
   f32 len = VecLen(v);
   len = (len == 0.0f) ? 1.0f : 1.0f / len;
   return ScaleVec(v, len);
@@ -140,10 +116,8 @@ inline vec3 NormVec(vec3 v)
 // Matrix ------------------------------------------------------------------
 // Styled after raysan5's raymath, and HandmadeMath
 
-typedef union mat4
-{
-  struct 
-  {
+typedef union mat4 {
+  struct {
     f32 m0, m1, m2, m3;
     f32 m4, m5, m6, m7;
     f32 m8, m9, m10, m11;
@@ -162,16 +136,12 @@ typedef union mat4
 
 } mat4;
 
-inline mat4 MulMat(mat4 m1, mat4 m2)
-{
+inline mat4 MulMat(mat4 m1, mat4 m2) {
   mat4 result = { 0 };
-  for (int row = 0; row < 4; row++)
-  {
-    for (int col = 0; col < 4; col++)
-    {
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
       f32 sum = 0;
-      for (int i = 0; i < 4; i++)
-      {
+      for (int i = 0; i < 4; i++) {
         sum += m2.data[row][i] * m1.data[i][col];
       }
       result.data[row][col] = sum;
@@ -180,8 +150,7 @@ inline mat4 MulMat(mat4 m1, mat4 m2)
   return result;
 }
 
-inline mat4 DiagonalMat(f32 diag)
-{
+inline mat4 DiagonalMat(f32 diag) {
   mat4 result = {0};
   
   result.data[0][0] = diag;
@@ -192,8 +161,7 @@ inline mat4 DiagonalMat(f32 diag)
   return (result);
 }
 
-inline mat4 TransposeMat(mat4 m)
-{
+inline mat4 TransposeMat(mat4 m) {
   mat4 result = { 0 };
 
   result.data[0][0] = m.data[0][0];
@@ -219,8 +187,7 @@ inline mat4 TransposeMat(mat4 m)
   return result;
 }
 
-inline mat4 TranslateMat(vec3 v)
-{
+inline mat4 TranslateMat(vec3 v) {
   mat4 result = DiagonalMat(1.0f);
   
   result.data[0][3] = v.x;
@@ -231,8 +198,7 @@ inline mat4 TranslateMat(vec3 v)
 }
 
 // Note: angle is in degrees, axis will be normalized internally
-inline mat4 RotateMat(f32 angle, vec3 axis)
-{
+inline mat4 RotateMat(f32 angle, vec3 axis) {
   mat4 result = DiagonalMat(1.0f);
   axis = NormVec(axis);
   
@@ -255,8 +221,7 @@ inline mat4 RotateMat(f32 angle, vec3 axis)
   return (result);
 }
 
-inline mat4 ScaleMat(vec3 v)
-{
+inline mat4 ScaleMat(vec3 v) {
   mat4 result = DiagonalMat(1.0f);
   
   result.data[0][0] = v.x;
@@ -267,8 +232,7 @@ inline mat4 ScaleMat(vec3 v)
 }
 
 
-inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 znear, f32 zfar)
-{
+inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 znear, f32 zfar) {
   mat4 result = {0};
   
   result.data[0][0] = 2.0f / (right - left);
@@ -284,8 +248,7 @@ inline mat4 OrthographicMat(f32 left, f32 right, f32 bot, f32 top, f32 znear, f3
 }
 
 // Note: fov asks for an angle in degrees
-inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 znear, f32 zfar)
-{
+inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 znear, f32 zfar) {
   mat4 result = {0};
   
   f32 cotan = 1.0f / tanf(DegToRad(0.5f * fov));
@@ -300,8 +263,7 @@ inline mat4 PerspectiveMat(f32 fov, f32 aspect_ratio, f32 znear, f32 zfar)
   return (result);
 }
 
-inline mat4 LookAtMat(vec3 eye, vec3 target, vec3 up)
-{
+inline mat4 LookAtMat(vec3 eye, vec3 target, vec3 up) {
   mat4 result;
   
   vec3 n = NormVec(SubVec(target, eye));
