@@ -331,7 +331,7 @@ void InitD3D(HWND window, Memory* gameMemory) {
   // this is a range of descriptors inside a descriptor heap
   D3D12_DESCRIPTOR_RANGE tilemapDescTblRanges[1];
   tilemapDescTblRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-  tilemapDescTblRanges[0].NumDescriptors = 11;
+  tilemapDescTblRanges[0].NumDescriptors = 12;
   tilemapDescTblRanges[0].BaseShaderRegister = 0;
   tilemapDescTblRanges[0].RegisterSpace = 0;
   tilemapDescTblRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -783,11 +783,15 @@ void InitD3D(HWND window, Memory* gameMemory) {
     // cube 2
     memcpy(cbvGPUAddress[i] + constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
     memcpy(cbvGPUAddress[i] + 2 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i] + 3 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i] + 4 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i] + 5 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
+    memcpy(cbvGPUAddress[i] + 6 * constantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
   }
 
   // now we can create a descriptor heap that will store our srv
   D3D12_DESCRIPTOR_HEAP_DESC heapDesc = { 0 };
-  heapDesc.NumDescriptors = 11;
+  heapDesc.NumDescriptors = 12;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
   hr = device->CreateDescriptorHeap(
@@ -808,6 +812,7 @@ void InitD3D(HWND window, Memory* gameMemory) {
   UploadTextureFromImage(&(gameState->unit_archer_img), 8, &archer_anim.textureBuffer, &archer_anim.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
   UploadTextureFromImage(&(gameState->tileset2_img), 9, &tileset2_tex.textureBuffer, &tileset2_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
   UploadTextureFromImage(&(gameState->ui_img), 10, &ui_tex.textureBuffer, &ui_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
+  UploadTextureFromImage(&(gameState->ui_data_img), 11, &ui_data_tex.textureBuffer, &ui_data_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
 
   // now we execute the command list to upload the initial assests (triangle data)
   commandList->Close();
@@ -880,7 +885,7 @@ void Update(HWND window, Memory* gameMemory) {
     cbPerObject.mvp = mvp;
     cbPerObject.is_animated = gameState->entities[i].is_animated;
     cbPerObject.layer_index = gameState->entities[i].data_layer;
-    cbPerObject.tileset_base_index = gameState->entities[i].tileset_base_index;
+    cbPerObject.tileset_base_index = gameState->entities[i].tileset_index;
     cbPerObject.anim_frame = gameState->anim_counter;
     // f32 anim_time = ((f32)(3 - gameState->anim_counter) / 4.0f);
     f32 anim_time = 1.0f - (gameState->anim_timer + gameState->anim_counter * 125.0f) / 500.0f;
@@ -900,6 +905,20 @@ void Update(HWND window, Memory* gameMemory) {
       UpdateSubresources(commandList, unit_tex.textureBuffer, unit_tex.textureBufferUploadHeap, 0, 0, 1, &textureData);
       // transition the texture default heap to a pixel shader resource
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(unit_tex.textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+    }
+    else if (i == 6) {
+      // Store texture data in upload heap
+      D3D12_SUBRESOURCE_DATA textureData = { 0 };
+      textureData.pData = &(gameState->ui_data_img.data[0]);
+      textureData.RowPitch = gameState->ui_data_img.bytesPerRow;
+      textureData.SlicePitch = gameState->ui_data_img.bytesPerRow;
+
+      // transition the texture default heap to a pixel shader resource
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(ui_data_tex.textureBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+      // now we copy the upload buffer contents to the default heap
+      UpdateSubresources(commandList, ui_data_tex.textureBuffer, ui_data_tex.textureBufferUploadHeap, 0, 0, 1, &textureData);
+      // transition the texture default heap to a pixel shader resource
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(ui_data_tex.textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
     }
   }
 }
@@ -995,13 +1014,17 @@ void UpdatePipeline(HWND window, Memory* gameMemory) {
   gpuDescriptorHandle = mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
   //gpuDescriptorHandle.ptr = (SIZE_T)(((INT64)gpuDescriptorHandle.ptr) + ((INT64)3) * (INT64)offset);
   commandList->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandle);
+  
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 3 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 4 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
-
+  
   commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 5 * constantBufferPerObjectAlignedSize);
+  commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
+
+  commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeaps[renderer.frameIndex]->GetGPUVirtualAddress() + 6 * constantBufferPerObjectAlignedSize);
   commandList->DrawIndexedInstanced(quad.numIndices, 1, 0, 0, 0);
 
   // transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a

@@ -11,15 +11,16 @@ i32 Index(i32 x, i32 y, i32 offset, i32 bytesPerRow) {
 void InitTilemap(Tilemap* tilemap, Image* img) {
   for (i32 y = 0; y < tilemap->height; y++) {
     for (i32 x = 0; x < tilemap->width; x++) {
-      i32 r = img->data[Index(x, y, 2, img->bytesPerRow)];
+      //i32 r = img->data[Index(x, y, 2, img->bytesPerRow)];
       i32 g = img->data[Index(x, y, 1, img->bytesPerRow)];
-      i32 b = img->data[Index(x, y, 0, img->bytesPerRow)];
-      i32 a = img->data[Index(x, y, 3, img->bytesPerRow)];
+      //i32 b = img->data[Index(x, y, 0, img->bytesPerRow)];
+      //i32 a = img->data[Index(x, y, 3, img->bytesPerRow)];
       
       // Set non water tiles, isLand = true
       if (g > 0) {
-        tilemap->tiles[y * tilemap->width + x] = 1;
+        tilemap->tiles[y * tilemap->width + x].isLand = 1;
       }
+      tilemap->tiles[y * tilemap->width + x].terrainType = g;
     }
   }
 }

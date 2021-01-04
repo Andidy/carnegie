@@ -1,4 +1,4 @@
 @echo off
 pushd build
-win32_carnegie.exe
+win32_base.exe
 popd

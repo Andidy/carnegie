@@ -44,7 +44,9 @@ struct GameState {
   Image unit_horseman_img;
   Image unit_archer_img;
 
+  i32 prev_camera_index;
   Image ui_img;
+  Image ui_data_img;
 };
 
 // Data
@@ -156,13 +158,13 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     gameState->toneHertz = 256;
     gameState->moved_unit = 0;
     gameState->anim_reset = 0;
-
+    
     // build proj and view matrix
     mat4 projmat = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
 
     // set starting camera state
-    vec3 cameraPos = Vec3(107.0f, 670.0f, -26.0f);
-    vec3 cameraTarget = Vec3(107.0f, 670.0f, 0.0f);
+    vec3 cameraPos = Vec3(2269.0f, 2160.0f - 405.0f, -26.0f);
+    vec3 cameraTarget = Vec3(2269.0f, 2160.0f - 405.0f, 0.0f);
     vec3 cameraUp = Vec3(0.0f, 1.0f, 0.0f);
 
     // view matrix
@@ -174,10 +176,13 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     gameState->entities[1] = { {1, 0, 0}, {-0.0001f, 0, 0}, {0.5, 0.5, 0.5}, -1 };
     gameState->entities[2] = { {1, -0.125f, 0}, {0, 0, -0.0003f}, {0.25, 0.25, 0.25}, -1 };
 
-    gameState->entities[3] = { {0, 0, 1.005f }, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
-    gameState->entities[4] = { {0, 0, 1.002f }, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 9 };
+    gameState->entities[3] = { {2160, 1080, 1.15f}, {0, 0, 0}, {4320, 2160, 1}, 0, 3, 5 };
+    gameState->entities[4] = { {2160, 1080, 1.1f}, {0, 0, 0}, {4320, 2160, 1}, 0, 4, 9 };
 
-    gameState->entities[5] = { {0, 0, 1.000f }, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
+    gameState->entities[5] = { {2160, 1080, 1.05f}, {0, 0, 0}, {4320, 2160, 1}, 1, 6, 7 };
+    
+    gameState->prev_camera_index = 0;
+    gameState->entities[6] = { {2160, 1080, 1.0f}, {0, 0, 0}, {4320, 2160, 1}, 0, 11, 10 };
 
     gameState->unit[0] = { {2269, 405}, {2269, 405}, {2269, 405}, NONE, 0, 0 };
     gameState->unit[1] = { {2271, 406}, {2271, 406}, {2271, 406}, NONE, 0, 0 };
@@ -200,6 +205,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->blank_unit_img));
 
     LoadImageFromDisk("../test_assets/ui.png", &(gameState->ui_img));
+    LoadImageFromDisk("../test_assets/ui_data.png", &(gameState->ui_data_img));
 
     Image* src = &(gameState->blank_unit_img);
     Image* dest = &(gameState->unit_img);
@@ -334,6 +340,13 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 2, bytesPerRow)] = (uchar)unit->type;
   }
 
+  int index = (int)Index((i32)gameState->camera.pos.x, 2160 - (i32)(gameState->camera.pos.y + 0.5f), 1, gameState->ui_data_img.bytesPerRow);
+  gameState->ui_data_img.data[index] = 1;
+  if (index != gameState->prev_camera_index)     {
+    gameState->ui_data_img.data[gameState->prev_camera_index] = 0;
+    gameState->prev_camera_index = index;
+  }
+  
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);
   gameState->camera.view = LookAtMat(gameState->camera.pos, gameState->camera.target, gameState->camera.up);
 

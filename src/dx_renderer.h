@@ -109,4 +109,5 @@ Texture unit_tex;
 Texture horseman_anim;
 Texture archer_anim;
 
+Texture ui_data_tex;
 Texture ui_tex;
