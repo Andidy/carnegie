@@ -4,7 +4,31 @@
 #include "ady_math.h"
 
 // ========================================================
-// Input 
+// Macros
+#define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
+
+#define Kilobytes(val) (1024 * (val))
+#define Megabytes(val) (1024 * Kilobytes(val))
+#define Gigabytes(val) (1024 * Megabytes(val))
+
+#define Assert(val) if(!(val)) {*(int *)0 = 0;}
+
+// end Macros
+// ========================================================
+// Memory
+
+struct Memory {
+  b32 isInitialized;
+  u64 size;
+  void* data; // NOTE: Must be cleared to ZERO at startup
+  u64 scratchsize;
+  void* scratchdata; // NOTE: Must be cleared to ZERO at startup
+};
+
+// end Memory
+// ========================================================
+// Input
+
 struct ButtonState {
   i32 transitionCount;
   b32 endedDown;
@@ -52,7 +76,7 @@ struct Input {
   KeyboardState keyboard;
 };
 
-/////////////// Functions /////////////////////
+// ------------ Functions -----------------
 
 b32 keyPressed(ButtonState button) {
   return (button.endedDown) && (button.transitionCount > 0);
@@ -65,9 +89,15 @@ b32 keyReleased(ButtonState button) {
 b32 keyDown(ButtonState button) {
   return (button.endedDown) && (button.transitionCount == 0);
 }
+
 // end Input
 // ========================================================
 // Graphics
+
+u32 window_width;
+u32 window_height;
+f32 window_aspectRatio;
+
 struct Image {
   uchar* data;
   u32 width;
@@ -77,9 +107,11 @@ struct Image {
   // i32 format_enum_num; ??? to store dxgi format from LoadImageFromDisk
   //                          to use in LoadTextureFromImage's format assignment
 };
+
 // end Graphics
 // ========================================================
 // I/O
+
 struct dev_ReadFileResult {
   u64 size;
   void* data;
@@ -90,3 +122,16 @@ internal void dev_FreeFile(void* memory);
 internal b32 dev_WriteFile(char* filename, u32 memorySize, void* memory);
 
 internal i32 LoadImageFromDisk(char* filename, Image* image);
+
+// end I/O
+// ========================================================
+// Audio
+
+struct SoundBuffer {
+  i32 samplesPerSecond;
+  i32 sampleCount;
+  i16* samples;
+};
+
+// end Audio
+// ========================================================

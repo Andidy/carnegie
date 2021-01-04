@@ -80,7 +80,7 @@ internal void win32_InitDirectSound(HWND Window, i32 samplesPerSecond, i32 buffe
 }
 
 internal void win32_FillSoundBuffer(win32_SoundStruct* soundstruct, DWORD byteToLock, DWORD bytesToWrite,
-  game_SoundBuffer* soundBuffer) {
+  SoundBuffer* soundBuffer) {
   void* region1;
   DWORD r1size;
   void* region2;

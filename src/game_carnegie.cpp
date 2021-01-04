@@ -2,15 +2,6 @@
 
 #include "universal.cpp"
 
-// Macros //
-#define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])
-
-#define Kilobytes(val) (1024 * (val))
-#define Megabytes(val) (1024 * Kilobytes(val))
-#define Gigabytes(val) (1024 * Megabytes(val))
-
-#define Assert(val) if(!(val)) {*(int *)0 = 0;}
-
 // GAME -> PLATFORM LAYER //
 /*
   These are the Game data types and functions which the platform layer may
@@ -19,35 +10,17 @@
 */
 // Input, Render Buffer, Timing, Sound Buffer
 
-u32 window_width;
-u32 window_height;
-f32 window_aspectRatio;
-
-struct game_SoundBuffer {
-  i32 samplesPerSecond;
-  i32 sampleCount;
-  i16* samples;
-};
-
-struct game_Memory {
-  b32 isInitialized;
-  u64 size;
-  void* data; // NOTE: Must be cleared to ZERO at startup
-  u64 scratchsize;
-  void* scratchdata; // NOTE: Must be cleared to ZERO at startup
-};
-
 #include "game_entity.h"
 #include "game_tileset_resolver.h"
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory * game_Memory, Input * Input, game_SoundBuffer * soundBuffer);
+internal void GameUpdateAndPrepareRenderData(f32 dt, Memory * game_Memory, Input * Input, SoundBuffer * soundBuffer);
 
 /* Game Only */
 
 const i32 NUM_ENTITIES = 6;
 const i32 NUM_UNITS = 5;
 const i32 UNIT_ANIM_OFFSET = 7;
-struct game_State {
+struct GameState {
   f32 dt;
 
   i32 toneHertz;
@@ -84,7 +57,7 @@ struct game_State {
 
 // ============================================================================
 // Sound
-internal void GameOutputSound(game_SoundBuffer* soundBuffer, i32 toneHertz) {
+internal void GameOutputSound(SoundBuffer* soundBuffer, i32 toneHertz) {
   local f32 tsin;
   i16 toneVolume = 100;
   i32 wavePeriod = soundBuffer->samplesPerSecond / toneHertz;
@@ -102,7 +75,7 @@ internal void GameOutputSound(game_SoundBuffer* soundBuffer, i32 toneHertz) {
 
 // ============================================================================
 // Game
-void UpdateCamera(Camera* camera, Input* input, game_State* gameState) {
+void UpdateCamera(Camera* camera, Input* input, GameState* gameState) {
   f32 speed = 0.01f * gameState->dt;
 
   if (keyDown(input->keyboard.space)) {
@@ -176,8 +149,8 @@ void CleanupUnit(Unit* unit) {
   unit->dir = NONE;
 }
 
-internal void GameUpdateAndPrepareRenderData(f32 dt, game_Memory* gameMemory, Input* input, game_SoundBuffer* soundBuffer) {
-  game_State* gameState = (game_State*)gameMemory->data;
+internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* input, SoundBuffer* soundBuffer) {
+  GameState* gameState = (GameState*)gameMemory->data;
 
   // Probably want to change this to being its own function call
   if (!gameMemory->isInitialized) {

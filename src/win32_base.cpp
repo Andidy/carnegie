@@ -157,7 +157,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       Input* newInput = &gameInput[0];
       Input* oldInput = &gameInput[1];
 
-      game_Memory gameMemory = { 0 };
+      Memory gameMemory = { 0 };
       gameMemory.isInitialized = false;
       gameMemory.size = Gigabytes((u64)6);
       gameMemory.data = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
@@ -228,7 +228,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         }
 
         //i16 samples[48000 * 2];
-        game_SoundBuffer soundBuffer = { 0 };
+        SoundBuffer soundBuffer = { 0 };
         soundBuffer.samplesPerSecond = soundstruct.samplesPerSecond;
         soundBuffer.sampleCount = bytesToWrite / soundstruct.bytesPerSample;
         soundBuffer.samples = samples;
@@ -248,7 +248,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
         Render(window, &gameMemory);
 
         char dev_buffer[256];
-        game_State* gameState = (game_State*)((&gameMemory)->data);
+        GameState* gameState = (GameState*)((&gameMemory)->data);
         vec3 pos = gameState->camera.pos;
         sprintf_s(dev_buffer, "Camera Pos: %f, %f, %f\n", pos.x, pos.y, pos.z);
         OutputDebugStringA(dev_buffer);

@@ -43,7 +43,7 @@ void WaitForPreviousFrame() {
   renderer.fenceValue[renderer.frameIndex]++;
 }
 
-void InitD3D(HWND window, game_Memory* gameMemory) {
+void InitD3D(HWND window, Memory* gameMemory) {
   /* Create the device */
   IDXGIFactory4* dxgiFactory;
   hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
@@ -795,7 +795,7 @@ void InitD3D(HWND window, game_Memory* gameMemory) {
   );
   win32_CheckSucceeded(hr);
   
-  game_State* gameState = (game_State*)gameMemory->data;
+  GameState* gameState = (GameState*)gameMemory->data;
   
   UploadTextureFromImage(&(gameState->cat_img), 0, &cat_tex.textureBuffer, &cat_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
   UploadTextureFromImage(&(gameState->dog_img), 1, &dog_tex.textureBuffer, &dog_tex.textureBufferUploadHeap, &mainDescriptorHeap, device, commandList);
@@ -858,8 +858,8 @@ void InitD3D(HWND window, game_Memory* gameMemory) {
 }
 
 
-void Update(HWND window, game_Memory* gameMemory) {
-  game_State* gameState = (game_State*)gameMemory->data;
+void Update(HWND window, Memory* gameMemory) {
+  GameState* gameState = (GameState*)gameMemory->data;
   Camera* camera = &(gameState->camera);
 
   // build vp matrix ---
@@ -904,7 +904,7 @@ void Update(HWND window, game_Memory* gameMemory) {
 }
 
 
-void UpdatePipeline(HWND window, game_Memory* gameMemory) {
+void UpdatePipeline(HWND window, Memory* gameMemory) {
   hr = 0;
 
   WaitForPreviousFrame();
@@ -1017,7 +1017,7 @@ void UpdatePipeline(HWND window, game_Memory* gameMemory) {
   win32_CheckSucceeded(hr);
 }
 
-void Render(HWND window, game_Memory* gameMemory) {
+void Render(HWND window, Memory* gameMemory) {
   hr = 0;
 
   UpdatePipeline(window, gameMemory);
