@@ -2,16 +2,8 @@
 
 #include "universal.cpp"
 
-// GAME -> PLATFORM LAYER //
-/*
-  These are the Game data types and functions which the platform layer may
-  need to access for various reasons. For example, the game_KeyboardState
-  needs to have its key states set by the platform layer.
-*/
-// Input, Render Buffer, Timing, Sound Buffer
-
 #include "game_entity.h"
-#include "game_tileset_resolver.h"
+#include "game_tileset.h"
 
 internal void GameUpdateAndPrepareRenderData(f32 dt, Memory * game_Memory, Input * Input, SoundBuffer * soundBuffer);
 
@@ -31,6 +23,8 @@ struct GameState {
   Image cat_img;
   Image dog_img;
   Image bird_img;
+
+  Tilemap tilemap;
 
   Image map_img;
   Image map2_img;
@@ -189,6 +183,9 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     gameState->unit[3] = { {2269, 409}, {2269, 409}, {2269, 409}, NONE, 0, 0 };
     gameState->unit[4] = { {2265, 401}, {2265, 401}, {2265, 401}, NONE, 0, 0 };
 
+    gameState->tilemap = { 4320, 2160, 0 };
+    gameState->tilemap.tiles = (Tile*)calloc(4320 * 2160, sizeof(Tile)); // replace with an allocator at some point
+
     LoadImageFromDisk("../test_assets/cat.png", &(gameState->cat_img));
     LoadImageFromDisk("../test_assets/dog.png", &(gameState->dog_img));
     LoadImageFromDisk("../test_assets/bird.png", &(gameState->bird_img));
@@ -213,7 +210,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     LoadImageFromDisk("../test_assets/horseman.png", &(gameState->unit_horseman_img));
     LoadImageFromDisk("../test_assets/archer.png", &(gameState->unit_archer_img));
 
-    ResolveTileset(&(gameState->map2_img));
+    ResolveTilingForTileset(&(gameState->map2_img));
 
     return;
   }

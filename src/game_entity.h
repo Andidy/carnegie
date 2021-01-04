@@ -29,11 +29,13 @@ enum Direction {
 };
 
 struct Tile {
-  // ???
+  i32 isLand;
+  i32 terrainType;
 };
 
 struct Tilemap {
-  // ???
+  i32 width, height;
+  Tile* tiles;
 };
 
 struct Unit {

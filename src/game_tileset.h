@@ -8,7 +8,23 @@ i32 Index(i32 x, i32 y, i32 offset, i32 bytesPerRow) {
   return y * bytesPerRow + x * 4 + offset;
 }
 
-void ResolveTileset(Image* img) {
+void InitTilemap(Tilemap* tilemap, Image* img) {
+  for (i32 y = 0; y < tilemap->height; y++) {
+    for (i32 x = 0; x < tilemap->width; x++) {
+      i32 r = img->data[Index(x, y, 2, img->bytesPerRow)];
+      i32 g = img->data[Index(x, y, 1, img->bytesPerRow)];
+      i32 b = img->data[Index(x, y, 0, img->bytesPerRow)];
+      i32 a = img->data[Index(x, y, 3, img->bytesPerRow)];
+      
+      // Set non water tiles, isLand = true
+      if (g > 0) {
+        tilemap->tiles[y * tilemap->width + x] = 1;
+      }
+    }
+  }
+}
+
+void ResolveTilingForTileset(Image* img) {
   // i32 size = img->size;
   u32 width = 4320; // img->width;
   u32 height = 2160; // img->height;
