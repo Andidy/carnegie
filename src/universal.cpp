@@ -59,6 +59,16 @@ struct ControllerState {
   };
 };
 
+const int NUM_MOUSE_BUTTONS = 5;
+struct MouseState {
+  union {
+    ButtonState buttons[NUM_MOUSE_BUTTONS];
+    struct {
+      ButtonState left, right, middle, x1, x2;
+    };
+  };
+};
+
 const int NUM_KEYBOARD_BUTTONS = 32;
 struct KeyboardState {
   union {
@@ -73,6 +83,7 @@ struct KeyboardState {
 };
 
 struct Input {
+  MouseState mouse;
   KeyboardState keyboard;
 };
 
