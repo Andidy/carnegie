@@ -288,45 +288,49 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
 
   // Update Units
   for (i32 i = 0; i < NUM_UNITS; i++) {
+    Unit* unit = &(gameState->unit[i]);
+    
     if (gameState->anim_reset) {
-      if (gameState->unit[i].animation != 0) {
-        CleanupUnit(&(gameState->unit[i]));
+      if (unit->animation != 0) {
+        CleanupUnit(unit);
       }
-      else if (gameState->unit[i].dir != NONE) {
-        MoveUnit(&(gameState->unit[i]));
+      else if (unit->dir != NONE) {
+        MoveUnit(unit);
       }
     }
 
-    vec2 pos = gameState->unit[i].pos;
-    vec2 old_pos = gameState->unit[i].old_pos;
+    ivec2 pos = IVec2((i32)unit->pos.x, (i32)unit->pos.y);
+    ivec2 old_pos = IVec2((i32)unit->old_pos.x, (i32)unit->old_pos.y);
 
-    gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
-    gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
+    i32 bytesPerRow = gameState->unit_img.bytesPerRow;
 
-    i32 anim = gameState->unit[i].animation;
+    gameState->unit_img.data[(int)Index(pos.x, pos.y, 1, bytesPerRow)] = (uchar)unit->animation;
+    gameState->unit_img.data[(int)Index(pos.x, pos.y, 2, bytesPerRow)] = (uchar)unit->type;
+
+    i32 anim = unit->animation;
     if (anim == 0 || anim == 1) { // stationary
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
-      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
+      gameState->unit_img.data[(int)Index(pos.x, pos.y, 0, bytesPerRow)] = (uchar)0;
+      gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 0, bytesPerRow)] = (uchar)0;
     }
     else if (anim == 2) { // left
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)7;
-      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)8;
+      gameState->unit_img.data[(int)Index(pos.x, pos.y, 0, bytesPerRow)] = (uchar)7;
+      gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 0, bytesPerRow)] = (uchar)8;
     }
     else if (anim == 3) { // right
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
-      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
+      gameState->unit_img.data[(int)Index(pos.x, pos.y, 0, bytesPerRow)] = (uchar)4;
+      gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 0, bytesPerRow)] = (uchar)3;
     }
     else if (anim == 4) { // down
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)5;
-      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)6;
+      gameState->unit_img.data[(int)Index(pos.x, pos.y, 0, bytesPerRow)] = (uchar)5;
+      gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 0, bytesPerRow)] = (uchar)6;
     }
     else if (anim == 5) { // up
-      gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
-      gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
+      gameState->unit_img.data[(int)Index(pos.x, pos.y, 0, bytesPerRow)] = (uchar)2;
+      gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 0, bytesPerRow)] = (uchar)1;
     }
 
-    gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 1)] = (uchar)gameState->unit[i].animation;
-    gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 2)] = (uchar)(gameState->unit[i].type);
+    gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 1, bytesPerRow)] = (uchar)unit->animation;
+    gameState->unit_img.data[(int)Index(old_pos.x, old_pos.y, 2, bytesPerRow)] = (uchar)unit->type;
   }
 
   gameState->camera.proj = PerspectiveMat(45.0f, window_aspectRatio, 0.1f, 1000.0f);

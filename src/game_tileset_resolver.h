@@ -1,11 +1,11 @@
 #pragma once
 
-i32 Index(i32 x, i32 y, i32 bytesPerRow) {
+i32 Index(i32 x, i32 y, i32 offset, i32 bytesPerRow) {
   if (x < 0) x = 4319;
   if (y < 0) y = 2159;
   if (x >= 4320) x = 0;
   if (y >= 2160) y = 0;
-  return y * bytesPerRow + x * 4 + 1;
+  return y * bytesPerRow + x * 4 + offset;
 }
 
 void ResolveTileset(Image* img) {
@@ -20,40 +20,40 @@ void ResolveTileset(Image* img) {
   for (i32 y = 0; y < (i32)height; y++) {
     for (i32 x = 0; x < (i32)width; x++) {
       result = 0;
-      if (img->data[Index(x, y, bpr)] == 0) {
+      if (img->data[Index(x, y, 1, bpr)] == 0) {
         result = 1;
       }
       else {
-        if ((img->data[Index(x - 1, y - 1, bpr)] > 0) &&
-          ((img->data[Index(x - 1, y + 0, bpr)]) || (img->data[Index(x + 0, y - 1, bpr)]))) {
+        if ((img->data[Index(x - 1, y - 1, 1, bpr)] > 0) &&
+          ((img->data[Index(x - 1, y + 0, 1, bpr)]) || (img->data[Index(x + 0, y - 1, 1, bpr)]))) {
           result += 1;
         }
-        if (img->data[Index(x + 0, y - 1, bpr)] > 0) {
+        if (img->data[Index(x + 0, y - 1, 1, bpr)] > 0) {
           result += 2;
         }
-        if ((img->data[Index(x + 1, y - 1, bpr)] > 0) &&
-          ((img->data[Index(x + 1, y + 0, bpr)]) || (img->data[Index(x + 0, y - 1, bpr)]))) {
+        if ((img->data[Index(x + 1, y - 1, 1, bpr)] > 0) &&
+          ((img->data[Index(x + 1, y + 0, 1, bpr)]) || (img->data[Index(x + 0, y - 1, 1, bpr)]))) {
           result += 4;
         }
-        if (img->data[Index(x + 1, y + 0, bpr)] > 0) {
+        if (img->data[Index(x + 1, y + 0, 1, bpr)] > 0) {
           result += 8;
         }
-        if ((img->data[Index(x + 1, y + 1, bpr)] > 0) &&
-          ((img->data[Index(x + 1, y + 0, bpr)]) || (img->data[Index(x + 0, y + 1, bpr)]))) {
+        if ((img->data[Index(x + 1, y + 1, 1, bpr)] > 0) &&
+          ((img->data[Index(x + 1, y + 0, 1, bpr)]) || (img->data[Index(x + 0, y + 1, 1, bpr)]))) {
           result += 16;
         }
-        if (img->data[Index(x + 0, y + 1, bpr)] > 0) {
+        if (img->data[Index(x + 0, y + 1, 1, bpr)] > 0) {
           result += 32;
         }
-        if ((img->data[Index(x - 1, y + 1, bpr)] > 0) &&
-          ((img->data[Index(x - 1, y + 0, bpr)]) || (img->data[Index(x + 0, y + 1, bpr)]))) {
+        if ((img->data[Index(x - 1, y + 1, 1, bpr)] > 0) &&
+          ((img->data[Index(x - 1, y + 0, 1, bpr)]) || (img->data[Index(x + 0, y + 1, 1, bpr)]))) {
           result += 64;
         }
-        if (img->data[Index(x - 1, y + 0, bpr)] > 0) {
+        if (img->data[Index(x - 1, y + 0, 1, bpr)] > 0) {
           result += 128;
         }
       }
-      result_data[Index(x, y, bpr)] = result;
+      result_data[Index(x, y, 1, bpr)] = result;
     }
   }
 
