@@ -56,7 +56,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.y += dest_time;
 		}
-		if (discard_sector == 2) // up src
+		else if (discard_sector == 2) // up src
 		{
 			if (tileset_uv.y < src_time)
 			{
@@ -64,7 +64,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.y -= src_time;
 		}
-		if (discard_sector == 3) // right dest
+		else if (discard_sector == 3) // right dest
 		{
 			if (tileset_uv.x < dest_time)
 			{
@@ -72,7 +72,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.x -= dest_time;
 		}
-		if (discard_sector == 4) // right src
+		else if (discard_sector == 4) // right src
 		{
 			if (tileset_uv.x > dest_time)
 			{
@@ -80,7 +80,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.x += src_time;
 		}
-		if (discard_sector == 5) // down src
+		else if (discard_sector == 5) // down src
 		{
 			if (tileset_uv.y > dest_time)
 			{
@@ -88,7 +88,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.y += src_time;
 		}
-		if (discard_sector == 6) // down dest
+		else if (discard_sector == 6) // down dest
 		{
 			if (tileset_uv.y < dest_time)
 			{
@@ -96,7 +96,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.y -= dest_time;
 		}
-		if (discard_sector == 7) // left src
+		else if (discard_sector == 7) // left src
 		{
 			if (tileset_uv.x < src_time)
 			{
@@ -104,7 +104,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
 			}
 			tileset_uv.x -= src_time;
 		}
-		if (discard_sector == 8) // left dest
+		else if (discard_sector == 8) // left dest
 		{
 			if (tileset_uv.x > src_time)
 			{

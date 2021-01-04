@@ -230,8 +230,12 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     }
   }
 
+  // ======================================================
+  // Process user input
+
   INT color = PIX_COLOR(0, 0, 255);
   PIXBeginEvent(color, "USER INPUT");
+
   UpdateCamera(&gameState->camera, input, gameState);
 
   if (keyReleased(input->keyboard.left)) {
@@ -259,6 +263,12 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     gameState->moved_unit = 1;
   }
 
+  PIXEndEvent();
+  
+  // end Process User Input
+  // ======================================================
+  
+  // reset the unit animation image
   if (gameState->anim_reset) {
     //gameState->moved_unit = 0;
     color = PIX_COLOR(0, 255, 255);
@@ -276,8 +286,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     PIXEndEvent();
   }
 
-  PIXEndEvent();
-
+  // Update Units
   for (i32 i = 0; i < NUM_UNITS; i++) {
     if (gameState->anim_reset) {
       if (gameState->unit[i].animation != 0) {
@@ -299,19 +308,19 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)0;
     }
-    if (anim == 2) { // left
+    else if (anim == 2) { // left
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)7;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)8;
     }
-    if (anim == 3) { // right
+    else if (anim == 3) { // right
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)4;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)3;
     }
-    if (anim == 4) { // down
+    else if (anim == 4) { // down
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)5;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)6;
     }
-    if (anim == 5) { // up
+    else if (anim == 5) { // up
       gameState->unit_img.data[(int)(4 * pos.x + pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)2;
       gameState->unit_img.data[(int)(4 * old_pos.x + old_pos.y * gameState->unit_img.bytesPerRow + 0)] = (uchar)1;
     }

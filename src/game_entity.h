@@ -28,6 +28,10 @@ enum Direction {
   NUM_DIRECTIONS
 };
 
+struct Tile {
+  // ???
+};
+
 struct Tilemap {
   // ???
 };
