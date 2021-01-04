@@ -9,7 +9,7 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory * game_Memory, Input
 
 /* Game Only */
 
-const i32 NUM_ENTITIES = 6;
+const i32 NUM_ENTITIES = 7;
 const i32 NUM_UNITS = 5;
 const i32 UNIT_ANIM_OFFSET = 7;
 struct GameState {
