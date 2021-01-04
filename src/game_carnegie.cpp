@@ -43,6 +43,8 @@ struct GameState {
   Image unit_img;
   Image unit_horseman_img;
   Image unit_archer_img;
+
+  Image ui_img;
 };
 
 // Data
@@ -196,6 +198,8 @@ internal void GameUpdateAndPrepareRenderData(f32 dt, Memory* gameMemory, Input* 
     LoadImageFromDisk("../test_assets/tiled_tileset_test.png", &(gameState->tileset2_img));
 
     LoadImageFromDisk("../test_assets/unit_data.png", &(gameState->blank_unit_img));
+
+    LoadImageFromDisk("../test_assets/ui.png", &(gameState->ui_img));
 
     Image* src = &(gameState->blank_unit_img);
     Image* dest = &(gameState->unit_img);
