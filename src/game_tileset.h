@@ -76,3 +76,7 @@ void ResolveTilingForTileset(Image* img) {
 
   memcpy(img->data, result_data, 4320 * 2160 * 4);
 }
+
+void TilemapAStar(i32 startx, i32 starty, i32 goalx, i32 goaly, Tilemap* tilemap) {
+
+}

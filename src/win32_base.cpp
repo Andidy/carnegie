@@ -48,6 +48,8 @@ global HRESULT hr;
 #include "win32_fileio.cpp"
 #include "win32_sound.cpp"
 
+#include "obj_loader.h"
+
 LRESULT CALLBACK win32_MainWindowCallback(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
   LRESULT result = 0;
 
@@ -97,6 +99,7 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
   hr = SetThreadDescription(GetCurrentThread(), L"simulation_thread");
   if (FAILED(hr)) {
     // Call failed.
+    OutputDebugStringA("failed to set thread description\n");
   }
   
   // XINPUT Function Pointers to handle LIB/DLL Loading
@@ -164,6 +167,12 @@ i32 CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, 
       gameMemory.scratchsize = Gigabytes((u64)2);
       gameMemory.scratchdata = (u8*)VirtualAlloc(0, gameMemory.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
       
+
+      PermanentResourceAllocator permanent_resource_allocator(Kilobytes((u64)128));
+      LoadOBJModel("../test_assets/monkey_triangulated.obj", &permanent_resource_allocator);
+
+
+
       // Probably want to change this to being its own function call
       GameUpdateAndPrepareRenderData(0, &gameMemory, newInput, NULL);
 

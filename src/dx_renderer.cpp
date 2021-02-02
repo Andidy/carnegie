@@ -61,7 +61,7 @@ void InitD3D(HWND window, Memory* gameMemory) {
       continue;
     }
 
-    hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), 0);
+    hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), 0);
     if (SUCCEEDED(hr)) {
       adapterFound = true;
       break;
@@ -74,7 +74,7 @@ void InitD3D(HWND window, Memory* gameMemory) {
     __debugbreak();
   }
 
-  hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+  hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
   win32_CheckSucceeded(hr);
 
   /* Create Render Target View Command Queue */
@@ -154,6 +154,11 @@ void InitD3D(HWND window, Memory* gameMemory) {
     hr = HRESULT_FROM_WIN32(GetLastError());
     win32_CheckSucceeded(hr);
   }
+
+
+
+
+
 
 
 
