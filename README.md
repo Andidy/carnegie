@@ -21,7 +21,11 @@ Lerping between tiles: Dec 6: https://youtu.be/RJPII_JdBQE
 Moving character with user input and making the lerp smooth: Dec 15: https://youtu.be/MC1S00vQXRo
 
 At the end I also added a system to have prettier terrain by using a "tiling tileset": Dec26:
+![example screenshot of program running in december 2020](./screenshots/Dec26-2020.PNG)
 
+What I mean by a tiling tileset is that the rendering of the terrain understands where the coastline is and properly chooses the correct graphic for a tile so that the coastline
+flows from tile to tile automatically, with twists and corners. In the data all it says is where the water is and where the land is, and the tiling tileset system handles the 
+rest. I didn't adapt the forest and mountain graphics to this new system as it wasn't a programming task at that point.
 
 At this point I had achieved most of my original goals for the project aside from replacing the use of discard in the pixel shader with blending.
 I had also reached some major hurdles towards doing further development with the project. 
