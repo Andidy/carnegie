@@ -14,7 +14,7 @@ November 24 2020 Screenshot:
 ![example screenshot of program running in november 2020](./screenshots/Nov24-2020.PNG)
 
 After I had the tilemaps, layering, and animation working, I wanted to allow the user to move one of the characters around with the keyboard.
-I added movement between the tiles and then worked on making this movement prettier than just pressing a key and immediately the character was in the next tile.
+I added movement between the tiles and then worked on making this movement prettier than just pressing a key and immediately having the character be in the next tile.
 
 Lerping between tiles: Dec6: https://youtu.be/RJPII_JdBQE
 
